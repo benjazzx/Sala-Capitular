@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/pc nuevbvo/Downloads/ComunicacionFeignCliente/**)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(git commit *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git fetch *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\pc nuevbvo\\Desktop\\Biblioteca_sala_"
