@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/pc nuevbvo/Downloads/ComunicacionFeignCliente/**)",
+      "Bash(git config *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\pc nuevbvo\\Desktop\\Biblioteca_sala_"
+    ]
+  }
+}
