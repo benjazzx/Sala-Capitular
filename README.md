@@ -8,8 +8,9 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 
 | Nombre | Rol |
 |--------|-----|
-| [Nombre Integrante 1] | Desarrollador |
-| [Nombre Integrante 2] | Desarrollador |
+| Benjamin Araneda | Desarrollador |
+| Gabriel Castro | Desarrollador |
+| Felipe Lara | Desarrollador |
 
 ## Tecnologías utilizadas
 

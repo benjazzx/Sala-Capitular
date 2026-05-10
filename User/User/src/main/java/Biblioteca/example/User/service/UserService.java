@@ -10,6 +10,7 @@ import Biblioteca.example.User.repository.UserRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class UserService {
 
     private final UserRepository repository;
     private final RolClient rolClient;
+    private final PasswordEncoder passwordEncoder;
 
     private UserResponseDTO mapToDTO(User user) {
         String rolNombre = null;
@@ -66,7 +68,7 @@ public class UserService {
                     log.warn("Login fallido: email no encontrado {}", dto.getEmail());
                     return new RuntimeException("Credenciales inválidas.");
                 });
-        if (!user.getPassword().equals(dto.getPassword())) {
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             log.warn("Login fallido: contraseña incorrecta para {}", dto.getEmail());
             throw new RuntimeException("Credenciales inválidas.");
         }
@@ -82,7 +84,7 @@ public class UserService {
             throw new RuntimeException("Ya existe un usuario con el email: " + dto.getEmail());
         }
         User user = new User(null, dto.getNombre(), dto.getApellido(), dto.getEmail(),
-                dto.getPassword(), dto.getRolId());
+                passwordEncoder.encode(dto.getPassword()), dto.getRolId());
         User saved = repository.save(user);
         log.info("Usuario creado exitosamente con id: {}", saved.getId());
         return mapToDTO(saved);
