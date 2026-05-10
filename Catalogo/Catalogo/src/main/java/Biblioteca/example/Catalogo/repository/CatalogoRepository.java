@@ -4,4 +4,5 @@ import Biblioteca.example.Catalogo.model.Catalogo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CatalogoRepository extends JpaRepository<Catalogo, Long> {
+    boolean existsByNombre(String nombre);
 }
