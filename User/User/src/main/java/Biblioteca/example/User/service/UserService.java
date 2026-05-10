@@ -1,6 +1,7 @@
 package Biblioteca.example.User.service;
 
 import Biblioteca.example.User.client.RolClient;
+import Biblioteca.example.User.dto.LoginRequestDTO;
 import Biblioteca.example.User.dto.RolResponseDTO;
 import Biblioteca.example.User.dto.UserRequestDTO;
 import Biblioteca.example.User.dto.UserResponseDTO;
@@ -49,6 +50,15 @@ public class UserService {
 
     public Optional<UserResponseDTO> obtenerPorId(Long id) {
         return repository.findById(id).map(this::mapToDTO);
+    }
+
+    public UserResponseDTO login(LoginRequestDTO dto) {
+        User user = repository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new RuntimeException("Credenciales inválidas."));
+        if (!user.getPassword().equals(dto.getPassword())) {
+            throw new RuntimeException("Credenciales inválidas.");
+        }
+        return mapToDTO(user);
     }
 
     public UserResponseDTO guardar(UserRequestDTO dto) {

@@ -1,5 +1,6 @@
 package Biblioteca.example.User.controller;
 
+import Biblioteca.example.User.dto.LoginRequestDTO;
 import Biblioteca.example.User.dto.UserRequestDTO;
 import Biblioteca.example.User.dto.UserResponseDTO;
 import Biblioteca.example.User.service.UserService;
@@ -28,6 +29,11 @@ public class UserController {
         return service.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) {
+        return ResponseEntity.ok(service.login(dto));
     }
 
     @PostMapping

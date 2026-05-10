@@ -20,9 +20,9 @@ public class DataInitializer implements CommandLineRunner {
         if (repository.count() > 0) return;
 
         List<Multa> multas = List.of(
-            new Multa(null, 7L, 3L, "Devolución tardía", LocalDate.of(2026, 3, 20), 1),
-            new Multa(null, 6L, 5L, "Daño en cubierta del libro", LocalDate.of(2026, 4, 5), 2),
-            new Multa(null, 5L, 1L, "Devolución tardía", LocalDate.of(2026, 2, 1), 1)
+            new Multa(null, 7L, 3L, "No devolvió el libro a tiempo", LocalDate.of(2026, 3, 20), 1, 1L, "NO_ENTREGA"),
+            new Multa(null, 6L, 5L, "Daño en cubierta del libro", LocalDate.of(2026, 4, 5), 2, 1L, "DAÑO"),
+            new Multa(null, 5L, 1L, "No devolvió el libro a tiempo", LocalDate.of(2026, 2, 1), 1, 1L, "NO_ENTREGA")
         );
 
         repository.saveAll(multas);

@@ -27,6 +27,14 @@ public class MultaController {
     public ResponseEntity<Boolean> puedeReservar(@PathVariable Long userId) {
         return ResponseEntity.ok(service.puedeReservar(userId));
     }
+    @GetMapping("/no-entrega")
+    public List<MultaResponseDTO> obtenerNoEntrega() {
+        return service.obtenerPorTipo("NO_ENTREGA");
+    }
+    @GetMapping("/tipo/{tipo}")
+    public List<MultaResponseDTO> obtenerPorTipo(@PathVariable String tipo) {
+        return service.obtenerPorTipo(tipo);
+    }
     @PostMapping
     public ResponseEntity<MultaResponseDTO> guardar(@Valid @RequestBody MultaRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(dto));
