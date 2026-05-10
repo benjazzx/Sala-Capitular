@@ -39,8 +39,6 @@ public class ReservaLibroService {
             if (Boolean.FALSE.equals(puede)) {
                 throw new RuntimeException("El usuario tiene más de 3 multas y no puede realizar reservas.");
             }
-        } catch (RuntimeException ex) {
-            throw ex;
         } catch (FeignException ex) {
             throw new RuntimeException("No se puede contactar con el servicio de multas.");
         }
