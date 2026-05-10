@@ -1,4 +1,5 @@
 package Biblioteca.example.ReservaLibro.client;
+import Biblioteca.example.ReservaLibro.dto.EstadoMultasDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -6,4 +7,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface MultasClient {
     @GetMapping("/api/multas/usuario/{userId}/puede-pedir")
     Boolean puedeReservar(@PathVariable Long userId);
+    @GetMapping("/api/multas/usuario/{userId}/estado")
+    EstadoMultasDTO obtenerEstado(@PathVariable Long userId);
 }

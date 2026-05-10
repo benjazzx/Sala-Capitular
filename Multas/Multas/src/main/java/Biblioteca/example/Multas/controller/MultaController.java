@@ -1,4 +1,5 @@
 package Biblioteca.example.Multas.controller;
+import Biblioteca.example.Multas.dto.EstadoMultasDTO;
 import Biblioteca.example.Multas.dto.MultaRequestDTO;
 import Biblioteca.example.Multas.dto.MultaResponseDTO;
 import Biblioteca.example.Multas.service.MultaService;
@@ -26,6 +27,10 @@ public class MultaController {
     @GetMapping("/usuario/{userId}/puede-pedir")
     public ResponseEntity<Boolean> puedeReservar(@PathVariable Long userId) {
         return ResponseEntity.ok(service.puedeReservar(userId));
+    }
+    @GetMapping("/usuario/{userId}/estado")
+    public ResponseEntity<EstadoMultasDTO> obtenerEstadoUsuario(@PathVariable Long userId) {
+        return ResponseEntity.ok(service.obtenerEstadoUsuario(userId));
     }
     @GetMapping("/no-entrega")
     public List<MultaResponseDTO> obtenerNoEntrega() {

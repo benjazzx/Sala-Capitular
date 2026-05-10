@@ -8,4 +8,5 @@ public class ReservaLibroResponseDTO {
     private Long libroId;
     private LocalDate fechaReserva;
     private String estadoReserva;
+    private String aviso;
 }

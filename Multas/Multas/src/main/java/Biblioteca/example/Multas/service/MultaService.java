@@ -1,6 +1,7 @@
 package Biblioteca.example.Multas.service;
 import Biblioteca.example.Multas.client.HistorialClient;
 import Biblioteca.example.Multas.client.UserClient;
+import Biblioteca.example.Multas.dto.EstadoMultasDTO;
 import Biblioteca.example.Multas.dto.MultaRequestDTO;
 import Biblioteca.example.Multas.dto.MultaResponseDTO;
 import Biblioteca.example.Multas.dto.UserResponseDTO;
@@ -55,6 +56,26 @@ public class MultaService {
     }
     public List<MultaResponseDTO> obtenerPorTipo(String tipo) {
         return repository.findByTipo(tipo).stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+    public EstadoMultasDTO obtenerEstadoUsuario(Long userId) {
+        List<Multa> multas = repository.findByUserId(userId);
+        int totalCantidad = repository.sumCantidadByUserId(userId);
+        boolean puede = totalCantidad <= 3;
+        if (multas.isEmpty()) {
+            return new EstadoMultasDTO(true, 0, 0, "Sin multas pendientes.");
+        }
+        StringBuilder aviso = new StringBuilder();
+        if (!puede) aviso.append("RESERVA BLOQUEADA. ");
+        aviso.append("Tiene ").append(multas.size()).append(" multa(s) (total: ").append(totalCantidad).append(" punto(s)): ");
+        for (int i = 0; i < multas.size(); i++) {
+            Multa m = multas.get(i);
+            aviso.append("[").append(i + 1).append("] ")
+                 .append(m.getTipo()).append(" - ")
+                 .append(m.getDescripcion())
+                 .append(" (").append(m.getFecha()).append(")");
+            if (i < multas.size() - 1) aviso.append(" | ");
+        }
+        return new EstadoMultasDTO(puede, multas.size(), totalCantidad, aviso.toString());
     }
     public boolean puedeReservar(Long userId) {
         Integer total = repository.sumCantidadByUserId(userId);

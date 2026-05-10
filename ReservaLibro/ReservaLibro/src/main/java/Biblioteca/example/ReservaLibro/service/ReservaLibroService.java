@@ -2,6 +2,7 @@ package Biblioteca.example.ReservaLibro.service;
 import Biblioteca.example.ReservaLibro.client.LibroClient;
 import Biblioteca.example.ReservaLibro.client.MultasClient;
 import Biblioteca.example.ReservaLibro.client.UserClient;
+import Biblioteca.example.ReservaLibro.dto.EstadoMultasDTO;
 import Biblioteca.example.ReservaLibro.dto.ReservaLibroRequestDTO;
 import Biblioteca.example.ReservaLibro.dto.ReservaLibroResponseDTO;
 import Biblioteca.example.ReservaLibro.model.ReservaLibro;
@@ -19,9 +20,12 @@ public class ReservaLibroService {
     private final LibroClient libroClient;
     private final UserClient userClient;
     private final MultasClient multasClient;
-    private ReservaLibroResponseDTO mapToDTO(ReservaLibro r) {
+    private ReservaLibroResponseDTO mapToDTO(ReservaLibro r, String aviso) {
         return new ReservaLibroResponseDTO(r.getId(), r.getUserId(), r.getLibroId(),
-                r.getFechaReserva(), r.getEstadoReserva());
+                r.getFechaReserva(), r.getEstadoReserva(), aviso);
+    }
+    private ReservaLibroResponseDTO mapToDTO(ReservaLibro r) {
+        return mapToDTO(r, null);
     }
     private void validarLibro(Long libroId) {
         try { libroClient.obtenerPorId(libroId); }
@@ -33,12 +37,13 @@ public class ReservaLibroService {
         catch (FeignException.NotFound ex) { throw new RuntimeException("El usuario no existe con id: " + userId); }
         catch (FeignException ex) { throw new RuntimeException("No se puede contactar con el servicio de usuarios."); }
     }
-    private void validarMultas(Long userId) {
+    private String validarMultas(Long userId) {
         try {
-            Boolean puede = multasClient.puedeReservar(userId);
-            if (Boolean.FALSE.equals(puede)) {
-                throw new RuntimeException("El usuario tiene más de 3 multas y no puede realizar reservas.");
+            EstadoMultasDTO estado = multasClient.obtenerEstado(userId);
+            if (!estado.isPuedeReservar()) {
+                throw new RuntimeException(estado.getAviso());
             }
+            return estado.getTotalMultas() > 0 ? estado.getAviso() : null;
         } catch (FeignException ex) {
             throw new RuntimeException("No se puede contactar con el servicio de multas.");
         }
@@ -52,14 +57,14 @@ public class ReservaLibroService {
     public ReservaLibroResponseDTO guardar(ReservaLibroRequestDTO dto) {
         validarUser(dto.getUserId());
         validarLibro(dto.getLibroId());
-        validarMultas(dto.getUserId());
+        String aviso = validarMultas(dto.getUserId());
         if ("ACTIVA".equals(dto.getEstadoReserva())) {
             repository.findByLibroIdAndEstadoReserva(dto.getLibroId(), "ACTIVA")
                     .ifPresent(r -> { throw new RuntimeException("El libro ya tiene una reserva activa."); });
         }
         ReservaLibro r = new ReservaLibro(null, dto.getUserId(), dto.getLibroId(),
                 dto.getFechaReserva(), dto.getEstadoReserva());
-        return mapToDTO(repository.save(r));
+        return mapToDTO(repository.save(r), aviso);
     }
     public ReservaLibroResponseDTO actualizar(Long id, ReservaLibroRequestDTO dto) {
         ReservaLibro r = repository.findById(id)
