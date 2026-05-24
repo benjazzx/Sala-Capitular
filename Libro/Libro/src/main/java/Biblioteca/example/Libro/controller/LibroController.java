@@ -23,6 +23,11 @@ public class LibroController {
         return service.obtenerTodos();
     }
 
+    @GetMapping("/autor/{autorId}")
+    public ResponseEntity<List<LibroResponseDTO>> obtenerPorAutor(@PathVariable Long autorId) {
+        return ResponseEntity.ok(service.obtenerPorAutor(autorId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<LibroResponseDTO> obtenerPorId(@PathVariable Long id) {
         return service.obtenerPorId(id)

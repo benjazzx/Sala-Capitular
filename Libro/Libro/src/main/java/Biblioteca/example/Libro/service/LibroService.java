@@ -78,6 +78,14 @@ public class LibroService {
         return repository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
+    public List<LibroResponseDTO> obtenerPorAutor(Long autorId) {
+        log.info("Obteniendo libros del autor con id: {}", autorId);
+        List<LibroResponseDTO> libros = repository.findByAutorId(autorId)
+                .stream().map(this::mapToDTO).collect(Collectors.toList());
+        log.info("Se encontraron {} libros para el autor con id: {}", libros.size(), autorId);
+        return libros;
+    }
+
     public Optional<LibroResponseDTO> obtenerPorId(Long id) {
         log.info("Buscando libro con id: {}", id);
         return repository.findById(id).map(this::mapToDTO);

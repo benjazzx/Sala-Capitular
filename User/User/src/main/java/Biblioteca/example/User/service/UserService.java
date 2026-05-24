@@ -39,9 +39,9 @@ public class UserService {
                 user.getEmail(), user.getRolId(), rolNombre);
     }
 
-    private void validarRol(Long rolId) {
+    private RolResponseDTO validarYObtenerRol(Long rolId) {
         try {
-            rolClient.obtenerPorId(rolId);
+            return rolClient.obtenerPorId(rolId);
         } catch (FeignException.NotFound ex) {
             log.warn("Rol no encontrado con id: {}", rolId);
             throw new RuntimeException("El rol no existe con id: " + rolId);
@@ -78,7 +78,11 @@ public class UserService {
 
     public UserResponseDTO guardar(UserRequestDTO dto) {
         log.info("Creando nuevo usuario: {} {}", dto.getNombre(), dto.getApellido());
-        validarRol(dto.getRolId());
+        RolResponseDTO rol = validarYObtenerRol(dto.getRolId());
+        if ("ADMIN".equalsIgnoreCase(rol.getNombre())) {
+            log.warn("Intento de registro con rol ADMIN bloqueado para email: {}", dto.getEmail());
+            throw new RuntimeException("No se puede registrar un usuario con rol ADMIN.");
+        }
         if (repository.existsByEmail(dto.getEmail())) {
             log.warn("Validación fallida: email duplicado {}", dto.getEmail());
             throw new RuntimeException("Ya existe un usuario con el email: " + dto.getEmail());
@@ -97,7 +101,7 @@ public class UserService {
                     log.warn("Usuario no encontrado con id: {}", id);
                     return new RuntimeException("Usuario no encontrado con id: " + id);
                 });
-        validarRol(dto.getRolId());
+        validarYObtenerRol(dto.getRolId());
         user.setNombre(dto.getNombre());
         user.setApellido(dto.getApellido());
         user.setEmail(dto.getEmail());
