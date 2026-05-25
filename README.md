@@ -215,3 +215,7 @@ src/main/java/Biblioteca/example/<Servicio>/
 ## Repositorio
 
 [https://github.com/benjazzx/Sala-Capitular](https://github.com/benjazzx/Sala-Capitular)
+
+## Registro de colaboración
+
+Se realizó una revisión general de la arquitectura del proyecto, considerando la organización por microservicios, comunicación mediante Feign Client y reglas de negocio principales.
