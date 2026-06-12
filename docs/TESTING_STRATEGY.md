@@ -1,124 +1,70 @@
-# Estrategia de Testing
+# Testing Strategy — Sala Capitular
 
 ## Objetivo
 
-Establecer una base de pruebas automatizadas (unitarias y de integración ligera con MockMvc)
-para los 11 microservicios del sistema **Sala Capitular**, con medición de cobertura mediante
-JaCoCo y un mínimo de **90% de cobertura de instrucciones** por módulo.
+Cubrir cada microservicio con pruebas unitarias de la capa de servicio (lógica de negocio) y de la capa de controlador (contratos HTTP), midiendo la cobertura con JaCoCo.
+
+## Tipos de prueba
+
+### 1. Service tests (lógica de negocio)
+- **Framework:** JUnit 5 + Mockito + AssertJ
+- **Anotación:** `@ExtendWith(MockitoExtension.class)`
+- Se mockean el repositorio y todos los clientes Feign con `@Mock`; el servicio se inyecta con `@InjectMocks`.
+- Cubren: listar, obtener por ID (presente y ausente), crear, actualizar (existe y no existe), eliminar (existe y no existe) y las reglas de negocio específicas (validaciones cruzadas vía Feign, ISBN único, bloqueo por multas, roles ADMIN/AUTOR, etc.).
+
+### 2. Controller tests (capa web)
+- **Framework:** `@WebMvcTest` + MockMvc + Mockito
+- El servicio se mockea con `@MockitoBean`, compatible con Spring Boot 4.
+- Cubren: cada endpoint, los códigos 200/201/204/404, las validaciones de DTO que producen 400, y la traducción de `RuntimeException` a 400 vía `GlobalExceptionHandler`.
+
+### 3. Application context test
+- Cada servicio mantiene su `*ApplicationTests.contextLoads()` anotado con `@ActiveProfiles("test")` para que el contexto cargue contra H2 en memoria en lugar de MySQL.
 
 ## Perfil de test (H2)
 
-Cada microservicio incluye `src/test/resources/application-test.properties` con una base de
-datos en memoria H2, evitando la dependencia de MySQL/XAMPP para ejecutar los tests:
+Cada servicio tiene `src/test/resources/application-test.properties` apuntando a una base H2 en memoria:
 
-```properties
-spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
-spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+```
+spring.datasource.url=jdbc:h2:mem:db_xxx;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
 spring.jpa.hibernate.ddl-auto=create-drop
-spring.jpa.show-sql=false
-spring.cloud.openfeign.lazy-attributes-resolution=true
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 ```
 
-La dependencia `com.h2database:h2` (scope `test`) se agregó a todos los `pom.xml`.
+Esto evita depender de MySQL/XAMPP para correr la suite.
 
-Los `*ApplicationTests` (smoke test de carga de contexto generado por Spring Initializr) ahora
-usan `@ActiveProfiles("test")` para apuntar a H2 en lugar de MySQL:
+## Cobertura de excepciones
 
-```java
-@SpringBootTest
-@ActiveProfiles("test")
-class XApplicationTests {
-    @Test
-    void contextLoads() { }
-}
-```
+El `GlobalExceptionHandler` de cada servicio se ejercita indirectamente desde los controller tests: cuando el servicio mockeado lanza `RuntimeException`, MockMvc verifica que el handler responde 400, y las validaciones `@Valid` verifican el manejo de `MethodArgumentNotValidException`.
 
-## Niveles de prueba
+## Inventario de suites
 
-### 1. Tests de Service (Fase 4)
-
-Pruebas unitarias con JUnit 5 + Mockito sobre la capa `service`, mockeando repositorios
-(`@Mock JpaRepository`) y, cuando aplica, clientes Feign (`@Mock XClient`). Cubren:
-
-- Casos de éxito de cada operación CRUD.
-- Casos de error (entidad no encontrada → excepción de negocio).
-- Reglas de negocio específicas (validaciones, cálculos, estados).
-
-### 2. Tests de Controller (Fase 5)
-
-Pruebas con `@WebMvcTest` + `MockMvc`, mockeando la capa `service` (`@MockBean`). Cubren:
-
-- Códigos de estado HTTP esperados (200, 201, 204, 404, 400, etc.).
-- Serialización/deserialización de DTOs (JSON).
-- Validaciones de entrada (`@Valid` en request DTOs).
-
-### 3. Tests de Excepciones (Fase 6)
-
-El `GlobalExceptionHandler` de cada microservicio se ejercita desde los tests de controller,
-forzando que el service mockeado lance las excepciones de negocio (`ResourceNotFoundException`,
-`IllegalArgumentException`, errores de validación, etc.) y verificando el cuerpo/estado de la
-respuesta de error.
-
-## JaCoCo
-
-Se agregó `jacoco-maven-plugin` (versión `0.8.13`) a los 11 `pom.xml`, con:
-
-- `prepare-agent`: instrumenta las clases antes de ejecutar los tests.
-- `report` (fase `verify`): genera el reporte HTML/XML en `target/site/jacoco`.
-- `check` (fase `verify`): falla el build si la cobertura de instrucciones del bundle es
-  menor al **90%**.
-
-```xml
-<plugin>
-    <groupId>org.jacoco</groupId>
-    <artifactId>jacoco-maven-plugin</artifactId>
-    <version>0.8.13</version>
-    <executions>
-        <execution>
-            <goals><goal>prepare-agent</goal></goals>
-        </execution>
-        <execution>
-            <id>report</id>
-            <phase>verify</phase>
-            <goals><goal>report</goal></goals>
-        </execution>
-        <execution>
-            <id>check</id>
-            <phase>verify</phase>
-            <goals><goal>check</goal></goals>
-            <configuration>
-                <rules>
-                    <rule>
-                        <element>BUNDLE</element>
-                        <limits>
-                            <limit>
-                                <counter>INSTRUCTION</counter>
-                                <value>COVEREDRATIO</value>
-                                <minimum>0.90</minimum>
-                            </limit>
-                        </limits>
-                    </rule>
-                </rules>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
-```
+| Servicio | ServiceTest | ControllerTest |
+|---|---|---|
+| Rol | ✓ | ✓ |
+| User | ✓ | ✓ |
+| Catalogo | ✓ (preexistente) | ✓ |
+| Estado | ✓ | ✓ |
+| Libro | ✓ | ✓ |
+| Estante | ✓ | ✓ |
+| Historial | ✓ | ✓ |
+| Multas | ✓ | ✓ |
+| ReservaLibro | ✓ | ✓ |
+| Detalle | ✓ | ✓ |
+| ReseñaLibro | ✓ | ✓ |
 
 ## Ejecución
 
-```bash
-mvn clean verify
+Por servicio:
+```
+.\mvnw.cmd clean verify
 ```
 
-Genera el reporte de cobertura en `target/site/jacoco/index.html` por microservicio.
-El resultado consolidado se documenta en `docs/COVERAGE_REPORT.md` (Fase 7).
+`verify` ejecuta los tests y genera el reporte JaCoCo en `target/site/jacoco/index.html`.
 
-## Limpieza de archivos duplicados
+En Linux/macOS usa `./mvnw clean verify`.
 
-Se eliminaron archivos duplicados (controllers, DTOs y `OpenApiConfig`) que estaban
-incorrectamente ubicados en `src/test/java` de **Estante** y **Multas** (copias del código de
-`src/main`, sin valor como tests).
+## Convenciones
+
+- Nombres de test: `metodo_condicion_resultadoEsperado` (ej. `guardar_isbnDuplicado_debeLanzarExcepcion`).
+- Patrón Arrange-Act-Assert.
+- Un assert principal por comportamiento; `verify(...)` para confirmar interacción con mocks.

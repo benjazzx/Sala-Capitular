@@ -1,59 +1,85 @@
-# Diagnóstico Inicial de Microservicios
+# Diagnóstico Inicial — Sala Capitular
 
-**Fecha**: 2026-06-12  
-**Rama**: `feature/documentacion-tests-swagger-gateway-docker`  
-**Java**: 17.0.17 (Oracle)  
-**Maven**: 3.9.15 (wrapper)  
-**Spring Boot**: 4.0.7  
-**Spring Cloud**: 2025.1.1  
+Fecha: 2026-06-12
+Rama: `feature/documentacion-tests-swagger-gateway-docker`
 
-## Cambios previos al diagnóstico
+## 1. Entorno
 
-- Se renombraron carpetas: `Rol (4)` → `Rol`, `Estado (1)` → `Estado`
-- Se cambió `java.version` de 21 a 17 en todos los `pom.xml` (JDK 17 instalado)
-- Se corrigió `modelVersion` en Multas de `4.0.7` a `4.0.0`
+| Herramienta | Versión requerida | Estado |
+|---|---|---|
+| Java | 17 | Confirmado |
+| Maven | Wrapper incluido (`mvnw.cmd` / `./mvnw`) | Confirmado |
+| MySQL (XAMPP/phpMyAdmin) | 8.x | Disponible |
+| Docker Desktop | última | Disponible |
 
-## Tabla de Diagnóstico
+## 2. Inventario de microservicios
 
-| Microservicio | Puerto | Compila | Tests actuales | Cantidad tests | Swagger | JaCoCo | Problemas detectados | Observaciones |
-|---|---|---|---|---|---|---|---|---|
-| Rol | 8081 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Sin Feign, CRUD simple |
-| User | 8082 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Feign: RolClient. Login con PasswordEncoder |
-| Catalogo | 8083 | ✅ Sí | ✅ CatalogoServiceTest | 7 | ✅ Sí (3.0.3) | ❌ No | Tiene OpenApiConfig | Mejor estado del proyecto |
-| Estado | 8084 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Sin Feign, CRUD simple |
-| Libro | 8085 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Feign: Catalogo, Estado, User |
-| Estante | 8086 | ✅ Sí | ⚠️ EstanteRepositoryTest | ~1 | ✅ Sí (3.0.3) | ❌ No | Controller, DTOs y config duplicados en src/test | Feign: LibroClient |
-| Historial | 8087 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Feign: Libro, User, Estado |
-| Multas | 8088 | ✅ Sí | ⚠️ MultaServiceTest | ~pocos | ✅ Sí (3.0.3) | ❌ No | Controller, DTOs y config duplicados en src/test. modelVersion era 4.0.7 | Feign: User, Historial. Lógica compleja |
-| ReservaLibro | 8089 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Feign: Libro, User, Multas. Lógica de bloqueo |
-| Detalle | 8090 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Feign: Historial, Libro |
-| ReseñaLibro | 8091 | ✅ Sí | ❌ Solo ApplicationTests | 0 reales | ❌ No | ❌ No | ApplicationTests requiere MySQL | Feign: Libro, User |
+El proyecto está compuesto por 11 microservicios Spring Boot independientes, cada uno con su propia base de datos MySQL y puerto dedicado.
 
-## Resumen
+| # | Servicio | Puerto | Base de datos | Dependencias (Feign) |
+|---|---|---|---|---|
+| 1 | Rol | 8081 | db_rol | — |
+| 2 | User | 8082 | db_user | Rol |
+| 3 | Catalogo | 8083 | db_catalogo | — |
+| 4 | Estado | 8084 | db_estado | — |
+| 5 | Libro | 8085 | db_libro | Catalogo, Estado, User |
+| 6 | Estante | 8086 | db_estante | Libro |
+| 7 | Historial | 8087 | db_historial | Libro, User, Estado |
+| 8 | Multas | 8088 | db_multas | User, Historial |
+| 9 | ReservaLibro | 8089 | db_reserva_libro | Libro, User, Multas |
+| 10 | Detalle | 8090 | db_detalle | Historial, Libro |
+| 11 | ReseñaLibro | 8091 | db_resena_libro | Libro, User |
 
-- **11/11** microservicios compilan correctamente ✅
-- **3/11** tienen dependencia Swagger (Catalogo, Estante, Multas)
-- **2/11** tienen tests de service reales (Catalogo, Multas)
-- **0/11** tienen tests de controller
-- **0/11** tienen JaCoCo configurado
-- **0/11** tienen application-test.properties con H2
-- **2/11** tienen archivos duplicados incorrectamente en src/test (Estante, Multas)
-- **Todos** los ApplicationTests fallarán sin MySQL activo
+## 3. Orden de arranque recomendado
 
-## Archivos mal ubicados (a limpiar)
+Por las dependencias Feign, los servicios deben arrancarse respetando este orden:
 
-### Estante
-- `src/test/java/.../config/OpenApiConfig.java` → mover a src/main
-- `src/test/java/.../controller/EstanteController.java` → eliminar (duplicado)
-- `src/test/java/.../dto/EstanteRequestDTO.java` → eliminar
-- `src/test/java/.../dto/EstanteResponseDTO.java` → eliminar
-- `src/test/java/.../dto/LibroResponseDTO.java` → eliminar
+1. **Sin dependencias (primero):** Rol, Catalogo, Estado
+2. **Segundo nivel:** User (→ Rol)
+3. **Tercer nivel:** Libro (→ Catalogo, Estado, User)
+4. **Cuarto nivel:** Estante (→ Libro), Historial (→ Libro, User, Estado)
+5. **Quinto nivel:** Multas (→ User, Historial), Detalle (→ Historial, Libro), ReseñaLibro (→ Libro, User)
+6. **Último:** ReservaLibro (→ Libro, User, Multas)
 
-### Multas
-- `src/test/java/.../config/OpenApiConfig.java` → mover a src/main
-- `src/test/java/.../controller/MultaController.java` → eliminar (duplicado)
-- `src/test/java/.../dto/EstadoMultasDTO.java` → eliminar
-- `src/test/java/.../dto/HistorialResponseDTO.java` → eliminar
-- `src/test/java/.../dto/MultaRequestDTO.java` → eliminar
-- `src/test/java/.../dto/MultaResponseDTO.java` → eliminar
-- `src/test/java/.../dto/UserResponseDTO.java` → eliminar
+## 4. Problemas detectados
+
+### 4.1 Carpetas con nombres problemáticos
+- `Rol (4)` → renombrada a `Rol`
+- `Estado (1)` → renombrada a `Estado`
+
+Los espacios y paréntesis complican los scripts de shell, los Dockerfiles y las rutas de compilación.
+
+### 4.2 Bug en pom.xml de Multas
+El `pom.xml` de Multas declaraba `<modelVersion>4.0.7</modelVersion>` cuando el valor correcto del esquema POM es `4.0.0`. Corregido. (El `4.0.7` parece haberse copiado por error desde la versión de Spring Boot.)
+
+### 4.3 Archivos espurios en src/test
+- **Estante:** `src/test/.../config/OpenApiConfig.java`, `controller/EstanteController.java`, y 3 DTOs eran copias del código de producción, no tests. Eliminados.
+- **Multas:** `src/test/.../config/OpenApiConfig.java`, `controller/MultaController.java`, y 5 DTOs en la misma situación. Eliminados.
+
+### 4.4 Tests vacíos
+- `MultaServiceTest` y `EstanteRepositoryTest` existían como clases vacías sin pruebas. Reemplazados por suites completas.
+
+### 4.5 Swagger incompleto
+Solo Catalogo, Estante y Multas tenían la dependencia springdoc. Faltaba en los 8 restantes.
+
+## 5. Compilación
+
+Cada microservicio se compila de forma independiente desde su carpeta con:
+
+```
+.\mvnw.cmd clean compile -DskipTests
+```
+
+En Linux/macOS:
+
+```
+./mvnw clean compile -DskipTests
+```
+
+> Nota: el primer build descarga Spring Boot 4.0.7 y Spring Cloud 2025.1.1 desde Maven Central, por lo que requiere conexión a internet.
+
+## 6. Estado tras esta fase
+
+- Carpetas renombradas y limpias.
+- pom.xml corregido y normalizado.
+- Base lista para añadir Swagger, JaCoCo y la batería de tests.

@@ -60,7 +60,7 @@ Cada microservicio sigue una arquitectura en capas idéntica:
 ## Comunicación
 
 - **Síncrona, vía Feign.** Cada llamada cruzada valida la existencia del recurso remoto y traduce `FeignException.NotFound` a un error de negocio legible.
-- **Sin descubrimiento de servicios** (no hay Eureka): las URLs se resుelven por configuración (`ms.*.url`), parametrizadas con variables de entorno para Docker.
+- **Sin descubrimiento de servicios** (no hay Eureka): las URLs se resuelven por configuración (`ms.*.url`), parametrizadas con variables de entorno para Docker.
 
 ## Persistencia
 

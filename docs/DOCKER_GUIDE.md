@@ -58,7 +58,7 @@ Cada servicio recibe por Compose:
 - `DB_URL`, `DB_USER`, `DB_PASSWORD` — conexión a MySQL (apunta al host `mysql` de la red interna).
 - `MS_*_URL` — URLs de los servicios dependientes (apuntan a los nombres de servicio de Compose, no a `localhost`).
 
-Los `application.properties` usan placeholders `${VAR:default}`, así que **sin** Docker (ejecución local con `mvn spring-boot:run`) siguen funcionando con sus valores `localhost` por defecto.
+Los `application.properties` usan placeholders `${VAR:default}`, así que **sin** Docker (ejecución local con `.\mvnw.cmd spring-boot:run`) siguen funcionando con sus valores `localhost` por defecto.
 
 ### Orden de arranque
 `depends_on` con `condition: service_healthy` para MySQL y `service_started` para las dependencias Feign reproduce el orden documentado en `DIAGNOSTICO_INICIAL.md`.

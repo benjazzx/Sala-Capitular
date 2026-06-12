@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Sistema de gestión de biblioteca desarrollado con arquitectura de microservicios independientes usando Spring Boot, Java 21 y comunicación entre servicios mediante Feign Client. Cada microservicio posee su propia base de datos, lógica de negocio y endpoints REST completos.
+Sistema de gestión de biblioteca desarrollado con arquitectura de microservicios independientes usando Spring Boot, Java 17 y comunicación entre servicios mediante Feign Client. Cada microservicio posee su propia base de datos, lógica de negocio y endpoints REST completos.
 
 ## Integrantes del equipo
 
@@ -14,14 +14,17 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 
 ## Tecnologías utilizadas
 
-- Java 21
-- Spring Boot 4.0.6
-- Spring Cloud 2025.1.1 (Feign Client)
+- Java 17
+- Spring Boot 4.0.7
+- Spring Cloud 2025.1.1 (Feign Client + Gateway MVC)
 - Spring Data JPA + Hibernate
-- MySQL (XAMPP)
+- MySQL (XAMPP) / H2 (tests)
 - Lombok
 - Bean Validation (JSR 380)
 - SLF4J (logging)
+- springdoc OpenAPI / Swagger UI
+- JUnit 5 + Mockito + JaCoCo
+- Docker + Docker Compose
 - Maven
 
 ## Microservicios implementados
@@ -88,9 +91,9 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 
 ### 1. Requisitos previos
 
-- Java 21 instalado
+- Java 17 instalado
 - XAMPP con MySQL corriendo en puerto 3306
-- Maven instalado
+- Maven Wrapper incluido en cada microservicio (`mvnw.cmd` en Windows, `./mvnw` en Linux/macOS)
 
 ### 2. Crear bases de datos en MySQL
 
@@ -115,25 +118,28 @@ CREATE DATABASE db_resena_libro;
 Los microservicios deben iniciarse en el siguiente orden debido a las dependencias entre ellos:
 
 ```
-1. Rol         (puerto 8081)
-2. Catalogo    (puerto 8083)
-3. Estado      (puerto 8084)
-4. User        (puerto 8082)
-5. Libro       (puerto 8085)
-6. Estante     (puerto 8086)
-7. Historial   (puerto 8087)
-8. Multas      (puerto 8088)
-9. ReservaLibro (puerto 8089)
-10. Detalle    (puerto 8090)
-11. ReseñaLibro (puerto 8091)
+1. Rol          (puerto 8081)
+2. Catalogo     (puerto 8083)
+3. Estado       (puerto 8084)
+4. User         (puerto 8082)
+5. Libro        (puerto 8085)
+6. Estante      (puerto 8086)
+7. Historial    (puerto 8087)
+8. Multas       (puerto 8088)
+9. Detalle      (puerto 8090)
+10. ReseñaLibro (puerto 8091)
+11. ReservaLibro (puerto 8089)
+12. API Gateway (puerto 8080)
 ```
 
 Para cada microservicio:
 
 ```bash
 cd <carpeta-del-microservicio>
-mvn spring-boot:run
+.\mvnw.cmd spring-boot:run
 ```
+
+En Linux/macOS usa `./mvnw spring-boot:run`.
 
 ### 4. Verificar que los datos se precargaron
 
@@ -215,6 +221,69 @@ src/main/java/Biblioteca/example/<Servicio>/
 ## Repositorio
 
 [https://github.com/benjazzx/Sala-Capitular](https://github.com/benjazzx/Sala-Capitular)
+
+## Documentación API (Swagger)
+
+Cada microservicio expone Swagger UI y el contrato OpenAPI:
+
+```
+http://localhost:{puerto}/swagger-ui/index.html
+http://localhost:{puerto}/v3/api-docs
+```
+
+Detalle completo de endpoints en [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md).
+
+## Tests y cobertura
+
+Cada servicio incluye pruebas unitarias de servicio y de controlador (JUnit 5 + Mockito + MockMvc) y mide cobertura con JaCoCo sobre una base H2 en memoria (perfil `test`).
+
+```bash
+cd <carpeta-del-microservicio>
+.\mvnw.cmd clean verify
+# Reporte: target/site/jacoco/index.html
+```
+
+En Linux/macOS usa `./mvnw clean verify`.
+
+Estrategia detallada en [`docs/TESTING_STRATEGY.md`](docs/TESTING_STRATEGY.md).
+
+## API Gateway
+
+Un API Gateway (Spring Cloud Gateway MVC) en el puerto **8080** enruta por path hacia los 11 servicios. Ejecutar:
+
+```bash
+cd api-gateway
+.\mvnw.cmd spring-boot:run
+# Acceso unificado: http://localhost:8080/api/...
+```
+
+Plan y tabla de rutas en [`docs/API_GATEWAY_PLAN.md`](docs/API_GATEWAY_PLAN.md).
+
+## Ejecución con Docker
+
+Todo el sistema (MySQL + 11 servicios + gateway) se levanta con Docker Compose:
+
+```bash
+cp .env.example .env
+docker compose up --build
+# Punto de entrada: http://localhost:8080/api/...
+```
+
+Guía completa en [`docs/DOCKER_GUIDE.md`](docs/DOCKER_GUIDE.md).
+
+## Documentación adicional
+
+| Documento | Contenido |
+|---|---|
+| [docs/DIAGNOSTICO_INICIAL.md](docs/DIAGNOSTICO_INICIAL.md) | Inventario, orden de arranque, problemas detectados |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitectura y diagrama de dependencias |
+| [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) | Endpoints y ejemplos JSON |
+| [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) | Estrategia de pruebas |
+| [docs/COVERAGE_REPORT.md](docs/COVERAGE_REPORT.md) | Reporte de cobertura JaCoCo |
+| [docs/API_GATEWAY_PLAN.md](docs/API_GATEWAY_PLAN.md) | Diseño del gateway |
+| [docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md) | Guía Docker |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Recomendaciones y mejoras futuras |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Registro de cambios |
 
 ## Registro de colaboración
 
