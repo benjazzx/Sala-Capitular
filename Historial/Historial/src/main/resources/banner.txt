@@ -1,0 +1,12 @@
+  _   _ _     _             _       _ 
+ | | | (_)___| |_ ___  _ __(_) __ _| |
+ | |_| | / __| __/ _ \| '__| |/ _` | |
+ |  _  | \__ \ || (_) | |  | | (_| | |
+ |_| |_|_|___/\__\___/|_|  |_|\__,_|_|
+                                      
+==================================================
+ Microservicio : ${spring.application.name}
+ Puerto        : ${server.port}
+ Perfil activo : ${spring.profiles.active:default}
+ Spring Boot   : ${spring-boot.version}
+==================================================
