@@ -1,4 +1,4 @@
-package Biblioteca.example.Multas.config;
+package Biblioteca.example.Estante.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -9,11 +9,11 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI multasOpenAPI() {
+    public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Microservicio Multas - Sala Capitular")
+                        .title("Microservicio Estantes - Sala Capitular")
                         .version("1.0.0")
-                        .description("API REST para la gestión de multas, sanciones y validación del estado de usuarios dentro del sistema Sala Capitular."));
+                        .description("API REST para la gestion de estantes dentro del sistema Sala Capitular."));
     }
 }
