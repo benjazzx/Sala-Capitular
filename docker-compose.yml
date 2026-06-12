@@ -1,0 +1,207 @@
+services:
+  # ---------------- Base de datos ----------------
+  mysql:
+    image: mysql:8.4
+    container_name: sc-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [sala-capitular]
+
+  # ---------------- Servicios sin dependencias ----------------
+  rol:
+    build: ./Rol/Rol
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_rol
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+    depends_on:
+      mysql: { condition: service_healthy }
+    networks: [sala-capitular]
+
+  catalogo:
+    build: ./Catalogo/Catalogo
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_catalogo
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+    depends_on:
+      mysql: { condition: service_healthy }
+    networks: [sala-capitular]
+
+  estado:
+    build: ./Estado/Estado
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_estado
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+    depends_on:
+      mysql: { condition: service_healthy }
+    networks: [sala-capitular]
+
+  # ---------------- Segundo nivel ----------------
+  user:
+    build: ./User/User
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_user
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_ROL_URL: http://rol:8081
+    depends_on:
+      mysql: { condition: service_healthy }
+      rol: { condition: service_started }
+    networks: [sala-capitular]
+
+  # ---------------- Tercer nivel ----------------
+  libro:
+    build: ./Libro/Libro
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_libro
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_CATALOGO_URL: http://catalogo:8083
+      MS_ESTADO_URL: http://estado:8084
+      MS_USER_URL: http://user:8082
+    depends_on:
+      mysql: { condition: service_healthy }
+      catalogo: { condition: service_started }
+      estado: { condition: service_started }
+      user: { condition: service_started }
+    networks: [sala-capitular]
+
+  # ---------------- Cuarto nivel ----------------
+  estante:
+    build: ./Estante/Estante
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_estante
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_LIBRO_URL: http://libro:8085
+    depends_on:
+      mysql: { condition: service_healthy }
+      libro: { condition: service_started }
+    networks: [sala-capitular]
+
+  historial:
+    build: ./Historial/Historial
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_historial
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_LIBRO_URL: http://libro:8085
+      MS_USER_URL: http://user:8082
+      MS_ESTADO_URL: http://estado:8084
+    depends_on:
+      mysql: { condition: service_healthy }
+      libro: { condition: service_started }
+      user: { condition: service_started }
+      estado: { condition: service_started }
+    networks: [sala-capitular]
+
+  # ---------------- Quinto nivel ----------------
+  multas:
+    build: ./Multas/Multas
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_multas
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_USER_URL: http://user:8082
+      MS_HISTORIAL_URL: http://historial:8087
+    depends_on:
+      mysql: { condition: service_healthy }
+      user: { condition: service_started }
+      historial: { condition: service_started }
+    networks: [sala-capitular]
+
+  detalle:
+    build: ./Detalle/Detalle
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_detalle
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_HISTORIAL_URL: http://historial:8087
+      MS_LIBRO_URL: http://libro:8085
+    depends_on:
+      mysql: { condition: service_healthy }
+      historial: { condition: service_started }
+      libro: { condition: service_started }
+    networks: [sala-capitular]
+
+  resena:
+    build: ./ReseñaLibro/ReseñaLibro
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_resena_libro
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_LIBRO_URL: http://libro:8085
+      MS_USER_URL: http://user:8082
+    depends_on:
+      mysql: { condition: service_healthy }
+      libro: { condition: service_started }
+      user: { condition: service_started }
+    networks: [sala-capitular]
+
+  # ---------------- Último nivel ----------------
+  reserva:
+    build: ./ReservaLibro/ReservaLibro
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/db_reserva_libro
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      MS_LIBRO_URL: http://libro:8085
+      MS_USER_URL: http://user:8082
+      MS_MULTAS_URL: http://multas:8088
+    depends_on:
+      mysql: { condition: service_healthy }
+      libro: { condition: service_started }
+      user: { condition: service_started }
+      multas: { condition: service_started }
+    networks: [sala-capitular]
+
+  # ---------------- API Gateway ----------------
+  api-gateway:
+    build: ./api-gateway
+    container_name: sc-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      MS_ROL_URL: http://rol:8081
+      MS_USER_URL: http://user:8082
+      MS_CATALOGO_URL: http://catalogo:8083
+      MS_ESTADO_URL: http://estado:8084
+      MS_LIBRO_URL: http://libro:8085
+      MS_ESTANTE_URL: http://estante:8086
+      MS_HISTORIAL_URL: http://historial:8087
+      MS_MULTAS_URL: http://multas:8088
+      MS_RESERVA_URL: http://reserva:8089
+      MS_DETALLE_URL: http://detalle:8090
+      MS_RESENA_URL: http://resena:8091
+    depends_on:
+      - rol
+      - user
+      - catalogo
+      - estado
+      - libro
+      - estante
+      - historial
+      - multas
+      - reserva
+      - detalle
+      - resena
+    networks: [sala-capitular]
+
+networks:
+  sala-capitular:
+    driver: bridge
+
+volumes:
+  mysql-data:
