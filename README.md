@@ -1,5 +1,7 @@
 # Sistema de Biblioteca - Arquitectura de Microservicios
 
+**Estado:** ✅ **Compilación Exitosa con Java 21**
+
 ## Descripción
 
 Sistema de gestión de biblioteca desarrollado con arquitectura de microservicios independientes usando Spring Boot, Java 21 y comunicación entre servicios mediante Feign Client. Cada microservicio posee su propia base de datos, lógica de negocio y endpoints REST completos.
@@ -11,6 +13,34 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 | Benjamin Araneda | Desarrollador |
 | Gabriel Castro | Desarrollador |
 | Felipe Lara | Desarrollador |
+
+## ⚡ Quick Start
+
+### 1. Compilar todos los servicios
+```bash
+cd d:\workspace\Duoc\Sala-Capitular
+build-all.bat
+```
+
+### 2. Ejecutar un servicio
+```bash
+run-service.bat Rol    # Rol en puerto 8081
+run-service.bat Libro  # Libro en puerto 8085
+```
+
+### 3. Ver API Swagger
+```
+http://localhost:8081/swagger-ui.html  (Rol)
+http://localhost:8085/swagger-ui.html  (Libro)
+http://localhost:8089/swagger-ui.html  (ReservaLibro)
+```
+
+### 4. Ejecutar tests con cobertura
+```bash
+run-tests.bat
+```
+
+**Documentación completa:** Ver [docs/ESTADO_ACTUAL.md](docs/ESTADO_ACTUAL.md)
 
 ## Tecnologías utilizadas
 
