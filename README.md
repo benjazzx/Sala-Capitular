@@ -2,7 +2,7 @@
 
 ## Descripción
 
-Sistema de gestión de biblioteca desarrollado con arquitectura de microservicios independientes usando Spring Boot, Java 17 y comunicación entre servicios mediante Feign Client. Cada microservicio posee su propia base de datos, lógica de negocio y endpoints REST completos.
+Sistema de gestión de biblioteca desarrollado con arquitectura de microservicios independientes usando Spring Boot, Java 21 y comunicación entre servicios mediante Feign Client. Cada microservicio posee su propia base de datos, lógica de negocio y endpoints REST completos.
 
 ## Integrantes del equipo
 
@@ -14,7 +14,7 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 
 ## Tecnologías utilizadas
 
-- Java 17
+- Java 21
 - Spring Boot 4.0.7
 - Spring Cloud 2025.1.1 (Feign Client + Gateway MVC)
 - Spring Data JPA + Hibernate
@@ -91,7 +91,7 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 
 ### 1. Requisitos previos
 
-- Java 17 instalado
+- Java 21 instalado
 - XAMPP con MySQL corriendo en puerto 3306
 - Maven Wrapper incluido en cada microservicio (`mvnw.cmd` en Windows, `./mvnw` en Linux/macOS)
 
