@@ -117,4 +117,48 @@ class ReservaLibroServiceTest {
         when(repository.existsById(99L)).thenReturn(false);
         assertThrows(RuntimeException.class, () -> service.eliminar(99L));
     }
+    @Test
+    void obtenerPorId_cuandoNoExiste_debeRetornarVacio() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        Optional<ReservaLibroResponseDTO> resultado = service.obtenerPorId(99L);
+
+        assertThat(resultado).isEmpty();
+    }
+
+    @Test
+    void guardar_usuarioInexistente_debeLanzarExcepcion() {
+        when(userClient.obtenerPorId(1L)).thenThrow(FeignException.NotFound.class);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dtoValido()));
+    }
+
+    @Test
+    void guardar_libroInexistente_debeLanzarExcepcion() {
+        when(userClient.obtenerPorId(1L)).thenReturn(new UserResponseDTO());
+        when(libroClient.obtenerPorId(1L)).thenThrow(FeignException.NotFound.class);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dtoValido()));
+    }
+
+    @Test
+    void guardar_conMultasNoBloqueantes_debeCrearConAviso() {
+        EstadoMultasDTO conAviso = new EstadoMultasDTO(true, 1, 2, "Tiene multas, pero puede reservar.");
+        when(userClient.obtenerPorId(1L)).thenReturn(new UserResponseDTO());
+        when(libroClient.obtenerPorId(1L)).thenReturn(new LibroResponseDTO());
+        when(multasClient.obtenerEstado(1L)).thenReturn(conAviso);
+        when(repository.findByLibroIdAndEstadoReserva(1L, "ACTIVA")).thenReturn(Optional.empty());
+        when(repository.save(any(ReservaLibro.class))).thenReturn(reservaEjemplo());
+
+        ReservaLibroResponseDTO resultado = service.guardar(dtoValido());
+
+        assertThat(resultado.getAviso()).contains("puede reservar");
+    }
+
+    @Test
+    void actualizar_cuandoNoExiste_debeLanzarExcepcion() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> service.actualizar(99L, dtoValido()));
+    }
 }

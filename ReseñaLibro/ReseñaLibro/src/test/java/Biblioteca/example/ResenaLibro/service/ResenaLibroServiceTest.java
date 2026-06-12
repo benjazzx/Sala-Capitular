@@ -115,4 +115,28 @@ class ResenaLibroServiceTest {
         when(repository.existsById(99L)).thenReturn(false);
         assertThrows(RuntimeException.class, () -> service.eliminar(99L));
     }
+    @Test
+    void obtenerPorId_cuandoNoExiste_debeRetornarVacio() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        Optional<ResenaLibroResponseDTO> resultado = service.obtenerPorId(99L);
+
+        assertThat(resultado).isEmpty();
+    }
+    @Test
+    void guardar_cuandoServicioUserCae_debeLanzarExcepcion() {
+        FeignException ex = mock(FeignException.class);
+        when(userClient.obtenerPorId(1L)).thenThrow(ex);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dtoValido()));
+    }
+
+    @Test
+    void guardar_cuandoServicioLibroCae_debeLanzarExcepcion() {
+        FeignException ex = mock(FeignException.class);
+        when(userClient.obtenerPorId(1L)).thenReturn(new UserResponseDTO());
+        when(libroClient.obtenerPorId(1L)).thenThrow(ex);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dtoValido()));
+    }
 }

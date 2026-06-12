@@ -124,4 +124,68 @@ class LibroServiceTest {
         when(repository.existsById(99L)).thenReturn(false);
         assertThrows(RuntimeException.class, () -> service.eliminar(99L));
     }
+    @Test
+    void obtenerPorId_cuandoNoExiste_debeRetornarVacio() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        Optional<LibroResponseDTO> resultado = service.obtenerPorId(99L);
+
+        assertThat(resultado).isEmpty();
+    }
+
+    @Test
+    void guardar_estadoInexistente_debeLanzarExcepcion() {
+        LibroRequestDTO dto = new LibroRequestDTO("Libro", null, 2020, "desc", 2L, 1L, 99L);
+        when(userClient.obtenerPorId(2L)).thenReturn(autorEjemplo());
+        when(catalogoClient.obtenerPorId(1L)).thenReturn(catalogoEjemplo());
+        when(estadoClient.obtenerPorId(99L)).thenThrow(FeignException.NotFound.class);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dto));
+    }
+
+    @Test
+    void guardar_autorInexistente_debeLanzarExcepcion() {
+        LibroRequestDTO dto = new LibroRequestDTO("Libro", null, 2020, "desc", 99L, 1L, 1L);
+        when(userClient.obtenerPorId(99L)).thenThrow(FeignException.NotFound.class);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dto));
+    }
+
+    @Test
+    void guardar_sinIsbn_debeCrearSinValidarDuplicado() {
+        LibroRequestDTO dto = new LibroRequestDTO("Libro", null, 2020, "desc", 2L, 1L, 1L);
+        Libro saved = new Libro(2L, "Libro", null, 2020, "desc", 2L, 1L, 1L);
+        when(userClient.obtenerPorId(2L)).thenReturn(autorEjemplo());
+        when(catalogoClient.obtenerPorId(1L)).thenReturn(catalogoEjemplo());
+        when(estadoClient.obtenerPorId(1L)).thenReturn(estadoEjemplo());
+        when(repository.save(any(Libro.class))).thenReturn(saved);
+
+        LibroResponseDTO resultado = service.guardar(dto);
+
+        assertThat(resultado.getIsbn()).isNull();
+        verify(repository, never()).existsByIsbn(anyString());
+    }
+
+    @Test
+    void actualizar_cuandoExiste_debeActualizarLibro() {
+        LibroRequestDTO dto = new LibroRequestDTO("Nuevo", "ISBN002", 2000, "desc2", 2L, 1L, 1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(libroEjemplo()));
+        when(userClient.obtenerPorId(2L)).thenReturn(autorEjemplo());
+        when(catalogoClient.obtenerPorId(1L)).thenReturn(catalogoEjemplo());
+        when(estadoClient.obtenerPorId(1L)).thenReturn(estadoEjemplo());
+        when(repository.save(any(Libro.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LibroResponseDTO resultado = service.actualizar(1L, dto);
+
+        assertThat(resultado.getTitulo()).isEqualTo("Nuevo");
+        assertThat(resultado.getIsbn()).isEqualTo("ISBN002");
+    }
+
+    @Test
+    void actualizar_cuandoNoExiste_debeLanzarExcepcion() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> service.actualizar(99L, new LibroRequestDTO("Libro", null, 2020, "desc", 2L, 1L, 1L)));
+    }
 }

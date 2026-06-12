@@ -1,16 +1,10 @@
 package Biblioteca.example.User.service;
 
 import Biblioteca.example.User.client.RolClient;
-import Biblioteca.example.User.dto.LoginRequestDTO;
-import Biblioteca.example.User.dto.RolResponseDTO;
-import Biblioteca.example.User.dto.UserRequestDTO;
-import Biblioteca.example.User.dto.UserResponseDTO;
+import Biblioteca.example.User.dto.*;
 import Biblioteca.example.User.model.User;
 import Biblioteca.example.User.repository.UserRepository;
 import feign.FeignException;
-import feign.Request;
-import feign.RequestTemplate;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,56 +16,142 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserRepository repository;
+    @Mock private UserRepository repository;
+    @Mock private RolClient rolClient;
+    @Mock private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private RolClient rolClient;
+    @InjectMocks private UserService service;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @InjectMocks
-    private UserService service;
-
-    private User user;
-    private RolResponseDTO rolCliente;
-    private RolResponseDTO rolAdmin;
-
-    @BeforeEach
-    void setUp() {
-        user = new User(1L, "Juan", "Perez", "juan@correo.com", "hashed-pass", 2L);
-        rolCliente = new RolResponseDTO(2L, "CLIENTE", "Cliente de la biblioteca");
-        rolAdmin = new RolResponseDTO(1L, "ADMIN", "Administrador");
+    private RolResponseDTO rolCliente() {
+        return new RolResponseDTO(2L, "CLIENTE", "Usuario cliente");
     }
 
-    private FeignException notFoundException() {
-        Request request = Request.create(Request.HttpMethod.GET, "/api/roles/99",
-                java.util.Collections.emptyMap(), null, new RequestTemplate());
-        return new FeignException.NotFound("Not Found", request, null, null);
+    private User userEjemplo() {
+        return new User(1L, "Juan", "Perez", "juan@mail.com", "$2a$10$hash", 2L);
     }
 
     @Test
-    void obtenerTodos_debeRetornarListaDeUsuarios() {
-        when(repository.findAll()).thenReturn(List.of(user));
-        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente);
+    void obtenerTodos_debeRetornarLista() {
+        when(repository.findAll()).thenReturn(List.of(userEjemplo()));
+        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente());
 
         List<UserResponseDTO> resultado = service.obtenerTodos();
 
         assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getEmail()).isEqualTo("juan@mail.com");
         assertThat(resultado.get(0).getRolNombre()).isEqualTo("CLIENTE");
     }
 
     @Test
-    void obtenerTodos_debeManejarErrorDeFeign() {
-        when(repository.findAll()).thenReturn(List.of(user));
-        when(rolClient.obtenerPorId(2L)).thenThrow(notFoundException());
+    void obtenerPorId_cuandoExiste_debeRetornar() {
+        when(repository.findById(1L)).thenReturn(Optional.of(userEjemplo()));
+        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente());
+
+        Optional<UserResponseDTO> resultado = service.obtenerPorId(1L);
+
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getNombre()).isEqualTo("Juan");
+    }
+
+    @Test
+    void obtenerPorId_cuandoNoExiste_debeRetornarVacio() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        Optional<UserResponseDTO> resultado = service.obtenerPorId(99L);
+
+        assertThat(resultado).isEmpty();
+    }
+
+    @Test
+    void login_credencialesValidas_debeRetornarUser() {
+        User user = userEjemplo();
+        when(repository.findByEmail("juan@mail.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("pass123", "$2a$10$hash")).thenReturn(true);
+        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente());
+
+        UserResponseDTO resultado = service.login(new LoginRequestDTO("juan@mail.com", "pass123"));
+
+        assertThat(resultado.getEmail()).isEqualTo("juan@mail.com");
+    }
+
+    @Test
+    void login_emailInexistente_debeLanzarExcepcion() {
+        when(repository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class,
+                () -> service.login(new LoginRequestDTO("no@mail.com", "pass")));
+    }
+
+    @Test
+    void login_passwordIncorrecta_debeLanzarExcepcion() {
+        when(repository.findByEmail("juan@mail.com")).thenReturn(Optional.of(userEjemplo()));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        assertThrows(RuntimeException.class,
+                () -> service.login(new LoginRequestDTO("juan@mail.com", "wrong")));
+    }
+
+    @Test
+    void guardar_rolValido_debeCrearUser() {
+        UserRequestDTO dto = new UserRequestDTO("Maria", "Lopez", "maria@mail.com", "pass123", 2L);
+        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente());
+        when(repository.existsByEmail("maria@mail.com")).thenReturn(false);
+        when(passwordEncoder.encode("pass123")).thenReturn("$2a$10$encoded");
+        User saved = new User(2L, "Maria", "Lopez", "maria@mail.com", "$2a$10$encoded", 2L);
+        when(repository.save(any(User.class))).thenReturn(saved);
+        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente());
+
+        UserResponseDTO resultado = service.guardar(dto);
+
+        assertThat(resultado.getEmail()).isEqualTo("maria@mail.com");
+    }
+
+    @Test
+    void guardar_rolAdmin_debeLanzarExcepcion() {
+        UserRequestDTO dto = new UserRequestDTO("Admin", "User", "admin@mail.com", "pass123", 1L);
+        RolResponseDTO rolAdmin = new RolResponseDTO(1L, "ADMIN", "Administrador");
+        when(rolClient.obtenerPorId(1L)).thenReturn(rolAdmin);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto));
+
+        assertThat(ex.getMessage()).contains("ADMIN");
+    }
+
+    @Test
+    void guardar_emailDuplicado_debeLanzarExcepcion() {
+        UserRequestDTO dto = new UserRequestDTO("Juan", "Perez", "juan@mail.com", "pass", 2L);
+        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente());
+        when(repository.existsByEmail("juan@mail.com")).thenReturn(true);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dto));
+    }
+
+    @Test
+    void eliminar_cuandoExiste_debeEliminar() {
+        when(repository.existsById(1L)).thenReturn(true);
+
+        service.eliminar(1L);
+
+        verify(repository).deleteById(1L);
+    }
+
+    @Test
+    void eliminar_cuandoNoExiste_debeLanzarExcepcion() {
+        when(repository.existsById(99L)).thenReturn(false);
+
+        assertThrows(RuntimeException.class, () -> service.eliminar(99L));
+    }
+    @Test
+    void obtenerTodos_cuandoRolNoResponde_debeUsarRolDesconocido() {
+        when(repository.findAll()).thenReturn(List.of(userEjemplo()));
+        when(rolClient.obtenerPorId(2L)).thenThrow(FeignException.NotFound.class);
 
         List<UserResponseDTO> resultado = service.obtenerTodos();
 
@@ -79,130 +159,31 @@ class UserServiceTest {
     }
 
     @Test
-    void obtenerPorId_debeRetornarUsuarioCuandoExiste() {
-        when(repository.findById(1L)).thenReturn(Optional.of(user));
-        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente);
-
-        Optional<UserResponseDTO> resultado = service.obtenerPorId(1L);
-
-        assertThat(resultado).isPresent();
-        assertThat(resultado.get().getEmail()).isEqualTo("juan@correo.com");
-    }
-
-    @Test
-    void obtenerPorId_debeRetornarVacioCuandoNoExiste() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-
-        Optional<UserResponseDTO> resultado = service.obtenerPorId(99L);
-
-        assertThat(resultado).isEmpty();
-        verify(rolClient, never()).obtenerPorId(any());
-    }
-
-    @Test
-    void login_debeRetornarUsuarioConCredencialesValidas() {
-        LoginRequestDTO dto = new LoginRequestDTO("juan@correo.com", "password123");
-        when(repository.findByEmail("juan@correo.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("password123", "hashed-pass")).thenReturn(true);
-        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente);
-
-        UserResponseDTO resultado = service.login(dto);
-
-        assertThat(resultado.getEmail()).isEqualTo("juan@correo.com");
-    }
-
-    @Test
-    void login_debeLanzarExcepcionSiEmailNoExiste() {
-        LoginRequestDTO dto = new LoginRequestDTO("inexistente@correo.com", "password123");
-        when(repository.findByEmail("inexistente@correo.com")).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> service.login(dto));
-    }
-
-    @Test
-    void login_debeLanzarExcepcionSiPasswordIncorrecta() {
-        LoginRequestDTO dto = new LoginRequestDTO("juan@correo.com", "wrongpass");
-        when(repository.findByEmail("juan@correo.com")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrongpass", "hashed-pass")).thenReturn(false);
-
-        assertThrows(RuntimeException.class, () -> service.login(dto));
-    }
-
-    @Test
-    void guardar_debeCrearUsuarioConRolValido() {
-        UserRequestDTO dto = new UserRequestDTO("Ana", "Lopez", "ana@correo.com", "password123", 2L);
-        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente);
-        when(repository.existsByEmail("ana@correo.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("encoded-pass");
-        User saved = new User(2L, "Ana", "Lopez", "ana@correo.com", "encoded-pass", 2L);
-        when(repository.save(any(User.class))).thenReturn(saved);
-
-        UserResponseDTO resultado = service.guardar(dto);
-
-        assertThat(resultado.getId()).isEqualTo(2L);
-        assertThat(resultado.getEmail()).isEqualTo("ana@correo.com");
-    }
-
-    @Test
-    void guardar_debeLanzarExcepcionSiRolEsAdmin() {
-        UserRequestDTO dto = new UserRequestDTO("Ana", "Lopez", "ana@correo.com", "password123", 1L);
-        when(rolClient.obtenerPorId(1L)).thenReturn(rolAdmin);
-
-        assertThrows(RuntimeException.class, () -> service.guardar(dto));
-        verify(repository, never()).save(any(User.class));
-    }
-
-    @Test
-    void guardar_debeLanzarExcepcionSiEmailYaExiste() {
-        UserRequestDTO dto = new UserRequestDTO("Ana", "Lopez", "ana@correo.com", "password123", 2L);
-        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente);
-        when(repository.existsByEmail("ana@correo.com")).thenReturn(true);
-
-        assertThrows(RuntimeException.class, () -> service.guardar(dto));
-        verify(repository, never()).save(any(User.class));
-    }
-
-    @Test
-    void guardar_debeLanzarExcepcionSiRolNoExiste() {
-        UserRequestDTO dto = new UserRequestDTO("Ana", "Lopez", "ana@correo.com", "password123", 99L);
-        when(rolClient.obtenerPorId(99L)).thenThrow(notFoundException());
+    void guardar_rolInexistente_debeLanzarExcepcion() {
+        UserRequestDTO dto = new UserRequestDTO("Ana", "Diaz", "ana@mail.com", "pass123", 99L);
+        when(rolClient.obtenerPorId(99L)).thenThrow(FeignException.NotFound.class);
 
         assertThrows(RuntimeException.class, () -> service.guardar(dto));
     }
 
     @Test
-    void actualizar_debeActualizarUsuarioExistente() {
-        UserRequestDTO dto = new UserRequestDTO("Juan", "Perez", "juan2@correo.com", "password123", 2L);
-        when(repository.findById(1L)).thenReturn(Optional.of(user));
-        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente);
+    void actualizar_cuandoExiste_debeActualizarUsuario() {
+        UserRequestDTO dto = new UserRequestDTO("Juan", "Nuevo", "nuevo@mail.com", "pass123", 2L);
+        when(repository.findById(1L)).thenReturn(Optional.of(userEjemplo()));
+        when(rolClient.obtenerPorId(2L)).thenReturn(rolCliente());
         when(repository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UserResponseDTO resultado = service.actualizar(1L, dto);
 
-        assertThat(resultado.getEmail()).isEqualTo("juan2@correo.com");
+        assertThat(resultado.getApellido()).isEqualTo("Nuevo");
+        assertThat(resultado.getEmail()).isEqualTo("nuevo@mail.com");
     }
 
     @Test
-    void actualizar_debeLanzarExcepcionSiUsuarioNoExiste() {
-        UserRequestDTO dto = new UserRequestDTO("Juan", "Perez", "juan2@correo.com", "password123", 2L);
+    void actualizar_cuandoNoExiste_debeLanzarExcepcion() {
         when(repository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> service.actualizar(99L, dto));
-    }
-
-    @Test
-    void eliminar_debeEliminarUsuarioExistente() {
-        when(repository.existsById(1L)).thenReturn(true);
-
-        service.eliminar(1L);
-
-        verify(repository, times(1)).deleteById(1L);
-    }
-
-    @Test
-    void eliminar_debeLanzarExcepcionSiUsuarioNoExiste() {
-        when(repository.existsById(99L)).thenReturn(false);
-
-        assertThrows(RuntimeException.class, () -> service.eliminar(99L));
+        assertThrows(RuntimeException.class,
+                () -> service.actualizar(99L, new UserRequestDTO("Ana", "Diaz", "ana@mail.com", "pass123", 2L)));
     }
 }

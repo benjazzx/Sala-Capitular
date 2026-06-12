@@ -104,4 +104,45 @@ class DetalleServiceTest {
         when(repository.existsById(99L)).thenReturn(false);
         assertThrows(RuntimeException.class, () -> service.eliminar(99L));
     }
+    @Test
+    void obtenerPorId_cuandoNoExiste_debeRetornarVacio() {
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        Optional<DetalleResponseDTO> resultado = service.obtenerPorId(99L);
+
+        assertThat(resultado).isEmpty();
+    }
+
+    @Test
+    void actualizar_historialInexistente_debeLanzarExcepcion() {
+        when(repository.findById(1L)).thenReturn(Optional.of(detalleEjemplo()));
+        when(historialClient.obtenerPorId(1L)).thenThrow(FeignException.NotFound.class);
+
+        assertThrows(RuntimeException.class, () -> service.actualizar(1L, dtoValido()));
+    }
+
+    @Test
+    void actualizar_libroInexistente_debeLanzarExcepcion() {
+        when(repository.findById(1L)).thenReturn(Optional.of(detalleEjemplo()));
+        when(historialClient.obtenerPorId(1L)).thenReturn(new HistorialResponseDTO());
+        when(libroClient.obtenerPorId(1L)).thenThrow(FeignException.NotFound.class);
+
+        assertThrows(RuntimeException.class, () -> service.actualizar(1L, dtoValido()));
+    }
+    @Test
+    void guardar_cuandoServicioHistorialCae_debeLanzarExcepcion() {
+        FeignException ex = mock(FeignException.class);
+        when(historialClient.obtenerPorId(1L)).thenThrow(ex);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dtoValido()));
+    }
+
+    @Test
+    void guardar_cuandoServicioLibroCae_debeLanzarExcepcion() {
+        FeignException ex = mock(FeignException.class);
+        when(historialClient.obtenerPorId(1L)).thenReturn(new HistorialResponseDTO());
+        when(libroClient.obtenerPorId(1L)).thenThrow(ex);
+
+        assertThrows(RuntimeException.class, () -> service.guardar(dtoValido()));
+    }
 }
