@@ -6,9 +6,9 @@ import Biblioteca.example.Detalle.service.DetalleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -23,8 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class DetalleControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @MockBean private DetalleService service;
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    @MockitoBean private DetalleService service;
 
     private DetalleResponseDTO detalleResp() {
         return new DetalleResponseDTO(1L, 1L, 1L, "Sin observaciones");

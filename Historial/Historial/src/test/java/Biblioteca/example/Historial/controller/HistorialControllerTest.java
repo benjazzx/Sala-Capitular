@@ -6,8 +6,8 @@ import Biblioteca.example.Historial.service.HistorialService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,8 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class HistorialControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @MockBean private HistorialService service;
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    @MockitoBean private HistorialService service;
 
     private HistorialResponseDTO historialResp() {
         return new HistorialResponseDTO(1L, 1L, 1L, LocalDate.of(2024, 1, 10), null, 1L);

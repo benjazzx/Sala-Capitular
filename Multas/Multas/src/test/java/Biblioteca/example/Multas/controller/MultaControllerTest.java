@@ -5,8 +5,8 @@ import Biblioteca.example.Multas.service.MultaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,8 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MultaControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @MockBean private MultaService service;
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    @MockitoBean private MultaService service;
 
     private MultaResponseDTO multaResp() {
         return new MultaResponseDTO(1L, 1L, 2L, 1L, "desc", LocalDate.of(2024, 1, 1), 1, "RETRASO");

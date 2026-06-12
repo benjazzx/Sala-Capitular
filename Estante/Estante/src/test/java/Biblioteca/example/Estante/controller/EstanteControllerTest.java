@@ -6,8 +6,8 @@ import Biblioteca.example.Estante.service.EstanteService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,8 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class EstanteControllerTest {
 
     @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @MockBean private EstanteService service;
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    @MockitoBean private EstanteService service;
 
     private EstanteResponseDTO estanteResp() {
         return new EstanteResponseDTO(1L, 3, 2, "A", 1L);
