@@ -1,232 +1,112 @@
-# RESUMEN DE RESOLUCIÓN - Sala Capitular
+# Resumen de Resolucion - Sala Capitular
 
-**Fecha:** 2026-06-12  
-**Estado:** ✅ **COMPLETADO**
+Fecha: 2026-06-12  
+Estado: Completado
 
-## Problemas Resueltos
+## Java 21
 
-### 1. ✅ Java 21 Instalado y Configurado
+El proyecto quedo configurado para Java 21 en los 11 microservicios y en `api-gateway`.
 
-**Problema:** Proyecto configurado para Java 21 pero solo Java 17 estaba disponible
+JDK validado localmente:
 
-**Solución:**
-- Instalado Java 21.0.10 en: `C:\Users\Felipe\AppData\Local\jdks\jdk-21.0.10`
-- Configurado como default en PowerShell
-- Agregado permanentemente al perfil
-
-**Verificación:**
-```bash
-java -version
-# openjdk version "21.0.10" 2026-01-20 LTS ✅
+```text
+D:\workspace\Duoc\Sala-Capitular\.jdk\jdk-21.0.11+10
+openjdk version "21.0.11" 2026-04-21 LTS
 ```
 
-### 2. ✅ Todos los Servicios Compilados
+Para activar Java 21 en una terminal PowerShell desde la raiz del proyecto:
 
-**Problema:** Necesidad de compilar 11 microservicios
-
-**Solución:**
-- Creado script `build-all.bat` para compilación automática
-- Compilación individual de cada servicio verificada
-- Solución de problemas en dependencias de Maven
-
-**Resultado:**
-```
-Rol              ✅ OK
-User             ✅ OK  
-Catalogo         ✅ OK
-Estado           ✅ OK
-Libro            ✅ OK
-Estante          ✅ OK (Swagger fix)
-Historial        ✅ OK
-Multas           ✅ OK
-ReservaLibro     ✅ OK
-Detalle          ✅ OK
-ReseñaLibro      ✅ OK
-─────────────────────────────
-Total: 11/11    ✅ EXITOSOS
+```powershell
+.\use-java21.ps1
 ```
 
-### 3. ✅ Swagger/OpenAPI Configurado
+## Validacion de Tests
 
-**Problema:** Swagger no disponible en todos los servicios
+Comando ejecutado:
 
-**Solución:**
-- Verificado que todos tengan dependencia `springdoc-openapi-starter-webmvc-ui`
-- Corregido Estante: Swagger estaba en `dependencyManagement` en lugar de `dependencies`
-- Configurado acceso a Swagger UI en cada puerto
-
-**Acceso Swagger:**
-```
-http://localhost:8081/swagger-ui.html  (Rol)
-http://localhost:8082/swagger-ui.html  (User)
-http://localhost:8083/swagger-ui.html  (Catalogo)
-...
+```powershell
+.\build-all.ps1
 ```
 
-### 4. ✅ JaCoCo Configurado para Cobertura de Tests
+Resultado:
 
-**Problema:** Necesidad de medir cobertura de código
-
-**Solución:**
-- Verificado que JaCoCo está en 9/11 servicios
-- User y ReseñaLibro tienen configuración incompleta
-- Creado script `run-tests.bat` para ejecutar tests y generar reportes
-
-**Reportes generados en:**
-```
-*/*/target/site/jacoco/index.html
+```text
+Todos los modulos pasaron clean verify con Java 21.
 ```
 
-## Archivos Creados/Modificados
+La validacion incluye:
 
-### Nuevos Scripts
-✅ `build-all.bat` - Compilar todos los servicios
-✅ `run-all.bat` - Ejecutar todos los servicios en orden
-✅ `run-service.bat` - Ejecutar un servicio individual
-✅ `run-tests.bat` - Ejecutar tests con JaCoCo
+- Rol
+- Catalogo
+- Estado
+- User
+- Libro
+- Estante
+- Historial
+- Multas
+- Detalle
+- ResenaLibro
+- ReservaLibro
+- ApiGateway
 
-### Nueva Documentación
-✅ `docs/ESTADO_ACTUAL.md` - Estado de compilación actual
-✅ `docs/GUIA_EJECUCION.md` - Guía paso a paso de ejecución
-✅ `VERIFICATION_CHECKLIST.md` - Checklist de verificación
-✅ `build-all.ps1` - Script PowerShell (como referencia)
+Los tests usan H2 con perfil `test`, por lo que no requieren XAMPP.
 
-### Archivos Modificados
-✅ `README.md` - Actualizado con Quick Start
-✅ `Estante/Estante/pom.xml` - Corregida configuración de Swagger
+## Ejecucion Local con XAMPP
 
-## Configuración Final
+Para correr los servicios reales, XAMPP/MySQL debe estar activo en `localhost:3306` y las bases deben existir.
 
-### Java
-```
-Versión: 21.0.10
-JAVA_HOME: C:\Users\Felipe\AppData\Local\jdks\jdk-21.0.10
-Permanente: Sí (en perfil PowerShell)
-```
+Orden recomendado:
 
-### Compilación
-```
-Todos los servicios: ✅ Éxito
-Tiempo total: ~2-3 minutos
-Errores: 0
-```
+1. Rol (8081)
+2. Catalogo (8083)
+3. Estado (8084)
+4. User (8082)
+5. Libro (8085)
+6. Estante (8086)
+7. Historial (8087)
+8. Multas (8088)
+9. Detalle (8090)
+10. ResenaLibro (8091)
+11. ReservaLibro (8089)
+12. ApiGateway (8080)
 
-### Ejecución
-```
-Opción 1: Servicio individual   → run-service.bat [nombre]
-Opción 2: Todos los servicios   → run-all.bat
-Opción 3: Docker Compose        → docker-compose up
-```
+Ejecutar un servicio desde la raiz:
 
-### Testing
-```
-Tests unitarios: ✅ Configurados (JUnit 5 + Mockito)
-Cobertura: ✅ Configurado (JaCoCo)
-Reportes: ✅ Disponibles en target/site/jacoco/
+```powershell
+.\run-service.ps1 Rol
 ```
 
-## Cómo Usar Ahora
+Ver servicios disponibles:
 
-### 1. Compilar
-```bash
-cd d:\workspace\Duoc\Sala-Capitular
-build-all.bat
+```powershell
+.\run-service.ps1
 ```
 
-### 2. Ejecutar
-```bash
-# Opción A: Un servicio
-run-service.bat Rol
+## Swagger
 
-# Opción B: Todos
-run-all.bat
+Cada microservicio expone:
+
+```text
+http://localhost:{puerto}/swagger-ui/index.html
+http://localhost:{puerto}/v3/api-docs
 ```
 
-### 3. Acceder
-```
-Rol:        http://localhost:8081/swagger-ui.html
-Libro:      http://localhost:8085/swagger-ui.html
-ReservaLibro: http://localhost:8089/swagger-ui.html
-```
+Ejemplos:
 
-### 4. Testear
-```bash
-run-tests.bat
-# Ver reportes en: */*/target/site/jacoco/index.html
+```text
+http://localhost:8081/swagger-ui/index.html
+http://localhost:8085/swagger-ui/index.html
+http://localhost:8091/swagger-ui/index.html
 ```
 
-## Documentación Disponible
+## Nota Sobre el IDE
 
-| Documento | Contenido |
-|-----------|-----------|
-| README.md | Descripción general y Quick Start |
-| docs/DIAGNOSTICO_INICIAL.md | Problemas iniciales resueltos |
-| docs/ESTADO_ACTUAL.md | Estado actual de compilación |
-| docs/GUIA_EJECUCION.md | **Guía paso a paso** ← Empezar aquí |
-| docs/ARCHITECTURE.md | Arquitectura del sistema |
-| docs/API_DOCUMENTATION.md | Documentación de APIs |
-| docs/TESTING_STRATEGY.md | Estrategia de testing |
-| docs/DOCKER_GUIDE.md | Guía Docker Compose |
-| VERIFICATION_CHECKLIST.md | Checklist completo |
+El aviso `Project configuration is not up-to-date with pom.xml` no es un error de ejecucion. Indica que el IDE aun no recargo Maven despues de cambiar el `pom.xml`.
 
-## Próximos Pasos Opcionales
+Acciones recomendadas:
 
-1. **Completar JaCoCo en User y ReseñaLibro**
-   - Agregar configuración correcta en pom.xml
-
-2. **Crear más tests unitarios**
-   - Actualmente hay estructura, pero pocos tests de negocio
-
-3. **Implementar API Gateway completo**
-   - Existe estructura, completar rutas
-
-4. **CI/CD Pipeline**
-   - GitHub Actions o similares
-
-5. **Containerización avanzada**
-   - Optimizar Dockerfiles
-   - Multi-stage builds
-
-## Validación Final
-
-✅ Java 21 funcionando
-✅ Todos los 11 servicios compilados
-✅ Swagger disponible en cada servicio
-✅ JaCoCo configurado para cobertura
-✅ Scripts de ejecución listos
-✅ Documentación completa
-✅ Checklist de verificación
-
-## Comandos Rápidos
-
-```bash
-# Compilar
-build-all.bat
-
-# Ejecutar un servicio
-run-service.bat Rol
-
-# Ejecutar todos
-run-all.bat
-
-# Hacer tests
-run-tests.bat
-
-# Ver estado
-cd Rol/Rol && mvnw clean verify
-
-# Docker
-docker-compose up
-```
-
-## Contacto/Dudas
-
-Revisar documentación en:
-- `docs/GUIA_EJECUCION.md` - Guía paso a paso
-- `VERIFICATION_CHECKLIST.md` - Verificar que todo funciona
-- Consultar logs de cada servicio en sus ventanas de terminal
-
----
-
-**Proyecto completado exitosamente.**  
-Todos los conflictos mencionados han sido resueltos.
+- VS Code: ejecutar `Java: Update Project Configuration`.
+- VS Code: ejecutar `Maven: Reload All Maven Projects`.
+- Si persiste: ejecutar `Java: Clean Java Language Server Workspace`.
+- IntelliJ IDEA: `Reload All Maven Projects`.
+- Eclipse/STS: `Maven > Update Project`.

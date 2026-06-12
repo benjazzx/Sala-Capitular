@@ -16,28 +16,28 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 
 ## ⚡ Quick Start
 
-### 1. Compilar todos los servicios
-```bash
+### 1. Validar todos los servicios
+```powershell
 cd d:\workspace\Duoc\Sala-Capitular
-build-all.bat
+.\build-all.ps1
 ```
 
 ### 2. Ejecutar un servicio
-```bash
-run-service.bat Rol    # Rol en puerto 8081
-run-service.bat Libro  # Libro en puerto 8085
+```powershell
+.\run-service.ps1 Rol
+.\run-service.ps1 Libro
 ```
 
 ### 3. Ver API Swagger
 ```
-http://localhost:8081/swagger-ui.html  (Rol)
-http://localhost:8085/swagger-ui.html  (Libro)
-http://localhost:8089/swagger-ui.html  (ReservaLibro)
+http://localhost:8081/swagger-ui/index.html  (Rol)
+http://localhost:8085/swagger-ui/index.html  (Libro)
+http://localhost:8089/swagger-ui/index.html  (ReservaLibro)
 ```
 
 ### 4. Ejecutar tests con cobertura
-```bash
-run-tests.bat
+```powershell
+.\build-all.ps1
 ```
 
 **Documentación completa:** Ver [docs/ESTADO_ACTUAL.md](docs/ESTADO_ACTUAL.md)
@@ -170,6 +170,14 @@ cd <carpeta-del-microservicio>
 ```
 
 En Linux/macOS usa `./mvnw spring-boot:run`.
+
+También puedes ejecutar desde la raíz del proyecto con Java 21 local:
+
+```powershell
+.\run-service.ps1 Rol
+.\run-service.ps1 Catalogo
+.\run-service.ps1 Estado
+```
 
 ### 4. Verificar que los datos se precargaron
 

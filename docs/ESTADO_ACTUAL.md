@@ -27,17 +27,17 @@ Todos los 11 microservicios compilaron exitosamente con Java 21:
 Una vez compilados, todos los servicios tendrán Swagger disponible:
 
 ```
-http://localhost:8081/swagger-ui.html    (Rol)
-http://localhost:8082/swagger-ui.html    (User)
-http://localhost:8083/swagger-ui.html    (Catalogo)
-http://localhost:8084/swagger-ui.html    (Estado)
-http://localhost:8085/swagger-ui.html    (Libro)
-http://localhost:8086/swagger-ui.html    (Estante)
-http://localhost:8087/swagger-ui.html    (Historial)
-http://localhost:8088/swagger-ui.html    (Multas)
-http://localhost:8089/swagger-ui.html    (ReservaLibro)
-http://localhost:8090/swagger-ui.html    (Detalle)
-http://localhost:8091/swagger-ui.html    (ReseñaLibro)
+http://localhost:8081/swagger-ui/index.html    (Rol)
+http://localhost:8082/swagger-ui/index.html    (User)
+http://localhost:8083/swagger-ui/index.html    (Catalogo)
+http://localhost:8084/swagger-ui/index.html    (Estado)
+http://localhost:8085/swagger-ui/index.html    (Libro)
+http://localhost:8086/swagger-ui/index.html    (Estante)
+http://localhost:8087/swagger-ui/index.html    (Historial)
+http://localhost:8088/swagger-ui/index.html    (Multas)
+http://localhost:8089/swagger-ui/index.html    (ReservaLibro)
+http://localhost:8090/swagger-ui/index.html    (Detalle)
+http://localhost:8091/swagger-ui/index.html    (ReseñaLibro)
 ```
 
 ## Orden de Ejecución Recomendado

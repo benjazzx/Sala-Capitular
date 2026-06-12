@@ -1,279 +1,126 @@
-# GUÍA DE EJECUCIÓN - Sala Capitular
+# Guia de Ejecucion - Sala Capitular
 
-Esta guía te ayudará a ejecutar todos los microservicios paso a paso.
+Esta guia resume como ejecutar y validar los microservicios desde PowerShell con Java 21.
 
-## Requisitos Previos
+## Requisitos
 
-✅ Java 21 instalado en: `C:\Users\Felipe\AppData\Local\jdks\jdk-21.0.10`
-✅ Todos los servicios compilados exitosamente
-✅ MySQL disponible (XAMPP u otro)
+- XAMPP con MySQL activo en `localhost:3306`.
+- Bases de datos creadas segun el README.
+- JDK 21 local incluido en `.jdk\jdk-21.0.11+10`.
 
-## Opción 1: Ejecutar un Servicio Individual
-
-### Paso 1: Abrir Terminal
-
-```bash
-cd d:\workspace\Duoc\Sala-Capitular
-```
-
-### Paso 2: Ejecutar el servicio
-
-```bash
-# Ejecutar Rol (8081)
-run-service.bat Rol
-
-# O en otra terminal:
-# Ejecutar Libro (8085)
-run-service.bat Libro
-```
-
-### Paso 3: Verificar que está corriendo
-
-```
-Swagger:  http://localhost:8081/swagger-ui.html
-Health:   http://localhost:8081/actuator/health
-API:      http://localhost:8081/api/...
-```
-
-**Servicios disponibles:**
-```
-Rol         → 8081
-User        → 8082
-Catalogo    → 8083
-Estado      → 8084
-Libro       → 8085
-Estante     → 8086
-Historial   → 8087
-Multas      → 8088
-ReservaLibro → 8089
-Detalle     → 8090
-ReseñaLibro → 8091
-```
-
----
-
-## Opción 2: Ejecutar Todos los Servicios en Orden
-
-### Paso 1: Ejecutar script
-
-```bash
-cd d:\workspace\Duoc\Sala-Capitular
-run-all.bat
-```
-
-Esto abrirá 11 ventanas de terminal, una para cada servicio en el orden correcto:
-
-**Fase 1 (0-5 seg):** Sin dependencias
-- Rol (8081)
-- Catalogo (8083)
-- Estado (8084)
-
-**Fase 2 (5-10 seg):** Dependencias simples
-- User (8082) → Rol
-- Libro (8085) → Catalogo, Estado, User
-
-**Fase 3 (10-15 seg):** Dependencias múltiples
-- Estante (8086) → Libro
-- Historial (8087) → Libro, User, Estado
-- Detalle (8090) → Historial, Libro
-
-**Fase 4 (15+ seg):** Servicios finales
-- Multas (8088) → User, Historial
-- ReseñaLibro (8091) → Libro, User
-- ReservaLibro (8089) → Libro, User, Multas
-
-### Paso 2: Esperar a que todos estén "RUNNING"
-
-Cada ventana mostrará:
-```
-2025-06-12 ... - INFO  ... : Started RolApplication in 3.5 seconds
-2025-06-12 ... - INFO  ... : Started UserApplication in 4.2 seconds
-...
-```
-
-### Paso 3: Acceder a los servicios
-
-**Dashboard de servicios:**
-```
-http://localhost:8081/swagger-ui.html  (Rol)
-http://localhost:8082/swagger-ui.html  (User)
-http://localhost:8083/swagger-ui.html  (Catalogo)
-http://localhost:8084/swagger-ui.html  (Estado)
-http://localhost:8085/swagger-ui.html  (Libro)
-http://localhost:8086/swagger-ui.html  (Estante)
-http://localhost:8087/swagger-ui.html  (Historial)
-http://localhost:8088/swagger-ui.html  (Multas)
-http://localhost:8089/swagger-ui.html  (ReservaLibro)
-http://localhost:8090/swagger-ui.html  (Detalle)
-http://localhost:8091/swagger-ui.html  (ReseñaLibro)
-```
-
----
-
-## Opción 3: Ejecutar con Docker Compose
-
-### Paso 1: Asegurar que Docker está corriendo
-
-```bash
-docker --version
-docker-compose --version
-```
-
-### Paso 2: Iniciar servicios
-
-```bash
-cd d:\workspace\Duoc\Sala-Capitular
-docker-compose up
-```
-
-### Paso 3: Verificar servicios
-
-```bash
-docker ps
-```
-
-Todos los servicios deberían estar corriendo en sus puertos asignados.
-
----
-
-## Ejecución de Tests y Cobertura
-
-### Ejecutar todos los tests
-
-```bash
-run-tests.bat
-```
-
-### Ejecutar tests de un servicio
-
-```bash
-cd d:\workspace\Duoc\Sala-Capitular\Rol\Rol
-.\mvnw.cmd clean test
-```
-
-### Ver reporte de cobertura
-
-```bash
-# Después de ejecutar tests
-d:\workspace\Duoc\Sala-Capitular\Rol\Rol\target\site\jacoco\index.html
-```
-
----
-
-## Testing Endpoints de Ejemplo
-
-### 1. Crear un Rol
-
-```bash
-curl -X POST "http://localhost:8081/api/roles" \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"ADMIN","descripcion":"Administrador"}'
-```
-
-### 2. Crear un Usuario
-
-```bash
-curl -X POST "http://localhost:8082/api/usuarios" \
-  -H "Content-Type: application/json" \
-  -d '{"nombre":"Juan","email":"juan@example.com","rolId":1}'
-```
-
-### 3. Crear un Libro
-
-```bash
-curl -X POST "http://localhost:8085/api/libros" \
-  -H "Content-Type: application/json" \
-  -d '{"titulo":"El Quijote","autorId":1,"catalogoId":1,"estadoId":1}'
-```
-
----
-
-## Troubleshooting
-
-### ❌ "Puerto ya está en uso"
-
-Si el puerto está siendo usado:
-
-```bash
-# Encontrar qué proceso está usando el puerto 8081
-netstat -ano | findstr :8081
-
-# Matar el proceso
-taskkill /PID <PID> /F
-```
-
-### ❌ "JAVA_HOME not found"
-
-Configurar Java 21:
+Activar Java 21 en la terminal actual:
 
 ```powershell
-$env:JAVA_HOME = 'C:\Users\Felipe\AppData\Local\jdks\jdk-21.0.10'
-$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+cd D:\workspace\Duoc\Sala-Capitular
+.\use-java21.ps1
+```
+
+Validar:
+
+```powershell
 java -version
 ```
 
-### ❌ "Database connection refused"
+Debe mostrar `openjdk version "21.0.11"`.
 
-Asegurar que MySQL está corriendo:
+## Validar Tests y Cobertura
 
-```bash
-# En XAMPP: Start MySQL
-# O en Docker:
-docker-compose up mysql
+Desde la raiz:
+
+```powershell
+.\build-all.ps1
 ```
 
-### ❌ "mvnw.cmd: File not found"
+Resultado esperado:
 
-Asegurar de estar en la carpeta correcta:
-
-```bash
-cd d:\workspace\Duoc\Sala-Capitular\Rol\Rol
-.\mvnw.cmd spring-boot:run
+```text
+Todos los modulos pasaron clean verify con Java 21.
 ```
 
-### ❌ "Servicio no responde"
+Los tests usan H2, por lo tanto no necesitan XAMPP.
 
-Verificar logs en la ventana del servicio. Si hay errores de dependencias, asegurar que los servicios dependientes están corriendo en este orden:
+## Ejecutar Microservicios
 
-1. **Sin dependencias:** Rol, Catalogo, Estado
-2. **Dependen de otros:** User, Libro, Estante, Historial, Detalle, Multas, ReseñaLibro, ReservaLibro
+Para ver el orden y los nombres aceptados:
 
----
-
-## Documentación
-
-- [DIAGNOSTICO_INICIAL.md](docs/DIAGNOSTICO_INICIAL.md) - Problemas resueltos
-- [ESTADO_ACTUAL.md](docs/ESTADO_ACTUAL.md) - Estado de compilación
-- [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) - APIs disponibles
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - Arquitectura del sistema
-- [TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) - Estrategia de testing
-- [DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md) - Guía Docker
-
----
-
-## Monitoreo y Mantenimiento
-
-### Ver logs de un servicio
-
-Las ventanas del CMD mostrarán los logs en tiempo real.
-
-### Detener un servicio
-
-`Ctrl+C` en su ventana del terminal
-
-### Detener todos los servicios
-
-Cerrar todas las ventanas o ejecutar:
-
-```bash
-# En Docker
-docker-compose down
+```powershell
+.\run-service.ps1
 ```
 
----
+Orden recomendado:
 
-¿Preguntas? Revisar los documentos en `docs/` o ejecutar:
+1. Rol (8081)
+2. Catalogo (8083)
+3. Estado (8084)
+4. User (8082)
+5. Libro (8085)
+6. Estante (8086)
+7. Historial (8087)
+8. Multas (8088)
+9. Detalle (8090)
+10. ResenaLibro (8091)
+11. ReservaLibro (8089)
+12. ApiGateway (8080)
 
-```bash
-run-service.bat  # Ver uso
+Ejecuta cada servicio en una terminal PowerShell distinta:
+
+```powershell
+.\run-service.ps1 Rol
+.\run-service.ps1 Catalogo
+.\run-service.ps1 Estado
+.\run-service.ps1 User
+.\run-service.ps1 Libro
+```
+
+El script configura `JAVA_HOME` automaticamente antes de arrancar el servicio.
+
+## Swagger
+
+Cada microservicio expone:
+
+```text
+http://localhost:{puerto}/swagger-ui/index.html
+http://localhost:{puerto}/v3/api-docs
+```
+
+Ejemplos:
+
+```text
+http://localhost:8081/swagger-ui/index.html
+http://localhost:8085/swagger-ui/index.html
+http://localhost:8091/swagger-ui/index.html
+```
+
+## Problema del IDE
+
+El aviso `Project configuration is not up-to-date with pom.xml` significa que el IDE no recargo Maven despues de modificar los POMs. No bloquea PowerShell.
+
+Soluciones:
+
+- VS Code: `Java: Update Project Configuration`.
+- VS Code: `Maven: Reload All Maven Projects`.
+- VS Code si persiste: `Java: Clean Java Language Server Workspace`.
+- IntelliJ IDEA: `Reload All Maven Projects`.
+- Eclipse/STS: `Maven > Update Project`.
+
+## Problemas Frecuentes
+
+### Puerto ocupado
+
+```powershell
+netstat -ano | findstr :8081
+taskkill /PID <PID> /F
+```
+
+### MySQL no conecta
+
+Verifica que XAMPP tenga MySQL iniciado y que exista la base de datos del servicio.
+
+### Maven usa Java incorrecto
+
+Ejecuta:
+
+```powershell
+.\use-java21.ps1
+.\run-service.ps1 Rol
 ```
