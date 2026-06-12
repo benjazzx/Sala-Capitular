@@ -14,41 +14,41 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@Tag(name = "Estados", description = "Operaciones CRUD para estados")
 @RequestMapping("/api/estados")
 @RequiredArgsConstructor
-@Tag(name = "Estados", description = "Operaciones CRUD para la gestión de estados")
 public class EstadoController {
 
     private final EstadoService service;
 
+    @Operation(summary = "Listar recursos")
     @GetMapping
-    @Operation(summary = "Listar todos los estados", description = "Retorna una lista con todos los estados registrados en el sistema.")
     public List<EstadoResponseDTO> obtenerTodos() {
         return service.obtenerTodos();
     }
 
+    @Operation(summary = "Obtener recurso por id")
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar estado por ID", description = "Retorna un estado específico según su identificador.")
     public ResponseEntity<EstadoResponseDTO> obtenerPorId(@PathVariable Long id) {
         return service.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Crear recurso")
     @PostMapping
-    @Operation(summary = "Crear un nuevo estado", description = "Registra un nuevo estado en el sistema.")
     public ResponseEntity<EstadoResponseDTO> guardar(@Valid @RequestBody EstadoRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(dto));
     }
 
+    @Operation(summary = "Actualizar recurso")
     @PutMapping("/{id}")
-    @Operation(summary = "Actualizar un estado", description = "Actualiza los datos de un estado existente según su ID.")
     public ResponseEntity<EstadoResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody EstadoRequestDTO dto) {
         return ResponseEntity.ok(service.actualizar(id, dto));
     }
 
+    @Operation(summary = "Eliminar recurso")
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar un estado", description = "Elimina un estado existente según su ID.")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();

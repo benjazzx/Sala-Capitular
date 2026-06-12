@@ -7,13 +7,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-
     @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("Microservicio Reseñas de Libros - Sala Capitular")
-                        .version("1.0.0")
-                        .description("API REST para la gestión de reseñas de libros dentro del sistema Sala Capitular."));
+    public OpenAPI resenaOpenAPI() {
+        return new OpenAPI().info(new Info()
+                .title("ReseñaLibro Microservice API")
+                .description("Gestión de reseñas de libros en Sala Capitular")
+                .version("1.0.0"));
     }
 }

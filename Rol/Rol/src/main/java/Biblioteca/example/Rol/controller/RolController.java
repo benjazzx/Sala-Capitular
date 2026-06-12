@@ -14,41 +14,41 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@Tag(name = "Roles", description = "Operaciones CRUD para roles")
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
-@Tag(name = "Roles", description = "Operaciones CRUD para la gestión de roles")
 public class RolController {
 
     private final RolService service;
 
+    @Operation(summary = "Listar recursos")
     @GetMapping
-    @Operation(summary = "Listar todos los roles", description = "Retorna una lista con todos los roles registrados en el sistema.")
     public List<RolResponseDTO> obtenerTodos() {
         return service.obtenerTodos();
     }
 
+    @Operation(summary = "Obtener recurso por id")
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar rol por ID", description = "Retorna un rol específico según su identificador.")
     public ResponseEntity<RolResponseDTO> obtenerPorId(@PathVariable Long id) {
         return service.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Crear recurso")
     @PostMapping
-    @Operation(summary = "Crear un nuevo rol", description = "Registra un nuevo rol en el sistema.")
     public ResponseEntity<RolResponseDTO> guardar(@Valid @RequestBody RolRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(dto));
     }
 
+    @Operation(summary = "Actualizar recurso")
     @PutMapping("/{id}")
-    @Operation(summary = "Actualizar un rol", description = "Actualiza los datos de un rol existente según su ID.")
     public ResponseEntity<RolResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody RolRequestDTO dto) {
         return ResponseEntity.ok(service.actualizar(id, dto));
     }
 
+    @Operation(summary = "Eliminar recurso")
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar un rol", description = "Elimina un rol existente según su ID.")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();

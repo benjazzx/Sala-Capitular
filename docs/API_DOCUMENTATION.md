@@ -1,98 +1,121 @@
-# Documentación de API (Swagger / OpenAPI)
+# API Documentation — Sala Capitular
 
-**Versión springdoc-openapi**: `2.x` (springdoc-openapi-starter-webmvc-ui 3.0.3, compatible con Spring Boot 4)
-
-Todos los microservicios del sistema **Sala Capitular** exponen su documentación interactiva
-mediante Swagger UI gracias a `springdoc-openapi-starter-webmvc-ui`.
-
-## Acceso a Swagger UI
-
-Cada microservicio expone su documentación en:
+Cada microservicio expone su documentación interactiva Swagger UI en:
 
 ```
-http://localhost:<puerto>/swagger-ui.html
+http://localhost:{puerto}/swagger-ui/index.html
 ```
 
-Y el contrato OpenAPI en formato JSON en:
+Y el contrato OpenAPI JSON en:
 
 ```
-http://localhost:<puerto>/v3/api-docs
+http://localhost:{puerto}/v3/api-docs
 ```
 
-## Microservicios y puertos
+## Resumen de endpoints
 
-| Microservicio | Puerto | Swagger UI | Tag principal |
-|---|---|---|---|
-| Rol | 8081 | http://localhost:8081/swagger-ui.html | Roles |
-| User | 8082 | http://localhost:8082/swagger-ui.html | Usuarios |
-| Catalogo | 8083 | http://localhost:8083/swagger-ui.html | Catálogo |
-| Estado | 8084 | http://localhost:8084/swagger-ui.html | Estados |
-| Libro | 8085 | http://localhost:8085/swagger-ui.html | Libros |
-| Estante | 8086 | http://localhost:8086/swagger-ui.html | Estantes |
-| Historial | 8087 | http://localhost:8087/swagger-ui.html | Historial |
-| Multas | 8088 | http://localhost:8088/swagger-ui.html | Multas |
-| ReservaLibro | 8089 | http://localhost:8089/swagger-ui.html | Reservas |
-| Detalle | 8090 | http://localhost:8090/swagger-ui.html | Detalle |
-| ReseñaLibro | 8091 | http://localhost:8091/swagger-ui.html | Reseñas |
+### Rol — 8081 — `/api/roles`
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/roles` | Listar roles |
+| GET | `/api/roles/{id}` | Obtener rol por ID |
+| POST | `/api/roles` | Crear rol (CLIENTE, ADMIN o AUTOR) |
+| PUT | `/api/roles/{id}` | Actualizar rol |
+| DELETE | `/api/roles/{id}` | Eliminar rol |
 
-## Configuración
+### User — 8082 — `/api/users`
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/users` | Listar usuarios |
+| GET | `/api/users/{id}` | Obtener usuario por ID |
+| POST | `/api/users/login` | Login (email + password) |
+| POST | `/api/users` | Registrar usuario (no permite rol ADMIN) |
+| PUT | `/api/users/{id}` | Actualizar usuario |
+| DELETE | `/api/users/{id}` | Eliminar usuario |
 
-Cada microservicio incluye una clase `OpenApiConfig` (paquete `config`) que define metadatos
-básicos del API mediante un bean `OpenAPI`:
+### Catalogo — 8083 — `/api/catalogos`
+CRUD estándar (GET, GET/{id}, POST, PUT/{id}, DELETE/{id}).
 
-```java
-@Configuration
-public class OpenApiConfig {
+### Estado — 8084 — `/api/estados`
+CRUD estándar.
 
-    @Bean
-    public OpenAPI customOpenAPI() {
-        return new OpenAPI()
-                .info(new Info()
-                        .title("Microservicio <Nombre> - Sala Capitular")
-                        .version("1.0.0")
-                        .description("..."));
-    }
+### Libro — 8085 — `/api/libros`
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/libros` | Listar libros |
+| GET | `/api/libros/{id}` | Obtener libro por ID |
+| GET | `/api/libros/autor/{autorId}` | Libros de un autor |
+| POST | `/api/libros` | Crear libro (valida autor con rol AUTOR, catálogo, estado, ISBN único) |
+| PUT | `/api/libros/{id}` | Actualizar libro |
+| DELETE | `/api/libros/{id}` | Eliminar libro |
+
+### Estante — 8086 — `/api/estantes`
+CRUD estándar (valida que el libro exista).
+
+### Historial — 8087 — `/api/historiales`
+CRUD estándar (valida libro, usuario y estado).
+
+### Multas — 8088 — `/api/multas`
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/multas` | Listar multas |
+| GET | `/api/multas/{id}` | Obtener multa por ID |
+| GET | `/api/multas/usuario/{userId}` | Multas de un usuario |
+| GET | `/api/multas/usuario/{userId}/puede-pedir` | ¿Puede reservar? (boolean) |
+| GET | `/api/multas/usuario/{userId}/estado` | Estado consolidado de multas |
+| GET | `/api/multas/no-entrega` | Multas tipo NO_ENTREGA |
+| GET | `/api/multas/tipo/{tipo}` | Multas por tipo |
+| POST | `/api/multas` | Crear multa (requiere admin con rol ADMIN) |
+| PUT | `/api/multas/{id}` | Actualizar multa |
+| DELETE | `/api/multas/{id}` | Eliminar multa |
+
+### ReservaLibro — 8089 — `/api/reservas`
+CRUD estándar. Al crear: valida usuario, libro, estado de multas (bloquea si total de puntos > 3) y que el libro no tenga ya una reserva ACTIVA.
+
+### Detalle — 8090 — `/api/detalles`
+CRUD estándar (valida historial y libro).
+
+### ReseñaLibro — 8091 — `/api/resenas`
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/resenas` | Listar reseñas |
+| GET | `/api/resenas/{id}` | Obtener reseña por ID |
+| GET | `/api/resenas/libro/{libroId}` | Reseñas de un libro |
+| POST | `/api/resenas` | Crear reseña (calificación 1–5) |
+| PUT | `/api/resenas/{id}` | Actualizar reseña |
+| DELETE | `/api/resenas/{id}` | Eliminar reseña |
+
+## Ejemplos de cuerpos JSON
+
+**Login (POST /api/users/login):**
+```json
+{ "email": "cliente@mail.com", "password": "secreta123" }
+```
+
+**Crear reserva (POST /api/reservas):**
+```json
+{ "userId": 1, "libroId": 5, "fechaReserva": "2026-06-12", "estadoReserva": "ACTIVA" }
+```
+
+**Crear multa (POST /api/multas):**
+```json
+{
+  "adminId": 1,
+  "userId": 4,
+  "historialId": 10,
+  "descripcion": "Devolución con 5 días de retraso",
+  "fecha": "2026-06-12",
+  "cantidad": 2,
+  "tipo": "RETRASO"
 }
 ```
 
-## Anotaciones utilizadas en los controllers
+## Códigos de respuesta comunes
 
-- `@Tag(name = "...", description = "...")`: agrupa los endpoints de un controller en Swagger UI.
-- `@Operation(summary = "...", description = "...")`: documenta cada endpoint (qué hace, parámetros relevantes).
-
-Ejemplo (`RolController`):
-
-```java
-@RestController
-@RequestMapping("/api/roles")
-@Tag(name = "Roles", description = "Operaciones CRUD para la gestión de roles")
-public class RolController {
-
-    @GetMapping
-    @Operation(summary = "Listar todos los roles", description = "Retorna una lista con todos los roles registrados en el sistema.")
-    public List<RolResponseDTO> obtenerTodos() { ... }
-}
-```
-
-## Dependencia Maven agregada
-
-```xml
-<dependency>
-    <groupId>org.springdoc</groupId>
-    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-    <version>3.0.3</version>
-</dependency>
-```
-
-Esta dependencia ya estaba presente en Catalogo, Estante y Multas, y se agregó en el resto:
-Rol, User, Estado, Libro, Historial, ReservaLibro, Detalle y ReseñaLibro.
-
-## Endpoints documentados
-
-Todos los endpoints CRUD (`GET`, `POST`, `PUT`/`PATCH`, `DELETE`) y endpoints de negocio
-específicos (login, validaciones, endpoints por relación entre entidades, etc.) cuentan con
-`@Operation` describiendo su propósito.
-
-Para el detalle completo de cada endpoint, parámetros y esquemas de request/response, consultar
-Swagger UI de cada microservicio levantado localmente — el contrato se genera automáticamente
-a partir de los DTOs y anotaciones de validación (`@NotNull`, `@NotBlank`, `@Email`, etc.).
+| Código | Significado |
+|---|---|
+| 200 OK | Operación exitosa (GET, PUT) |
+| 201 Created | Recurso creado (POST) |
+| 204 No Content | Recurso eliminado (DELETE) |
+| 400 Bad Request | Validación fallida o regla de negocio violada |
+| 404 Not Found | Recurso no encontrado (GET por ID) |
