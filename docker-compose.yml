@@ -1,5 +1,4 @@
 services:
-  # ---------------- Base de datos ----------------
   mysql:
     image: mysql:8.4
     container_name: sc-mysql
@@ -15,55 +14,94 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    networks: [sala-capitular]
+    networks:
+      - sala-capitular
 
-  # ---------------- Servicios sin dependencias ----------------
+  eureka-server:
+    build: ./eurekaserver
+    container_name: sc-eureka
+    ports:
+      - "8761:8761"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - sala-capitular
+
   rol:
     build: ./Rol/Rol
+    container_name: sc-rol
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_rol
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - sala-capitular
 
   catalogo:
     build: ./Catalogo/Catalogo
+    container_name: sc-catalogo
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_catalogo
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - sala-capitular
 
   estado:
     build: ./Estado/Estado
+    container_name: sc-estado
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_estado
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - sala-capitular
 
-  # ---------------- Segundo nivel ----------------
   user:
     build: ./User/User
+    container_name: sc-user
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_user
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
       MS_ROL_URL: http://rol:8081
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      rol: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      rol:
+        condition: service_started
+    networks:
+      - sala-capitular
 
-  # ---------------- Tercer nivel ----------------
   libro:
     build: ./Libro/Libro
+    container_name: sc-libro
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_libro
       DB_USER: root
@@ -71,28 +109,45 @@ services:
       MS_CATALOGO_URL: http://catalogo:8083
       MS_ESTADO_URL: http://estado:8084
       MS_USER_URL: http://user:8082
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      catalogo: { condition: service_started }
-      estado: { condition: service_started }
-      user: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      catalogo:
+        condition: service_started
+      estado:
+        condition: service_started
+      user:
+        condition: service_started
+    networks:
+      - sala-capitular
 
-  # ---------------- Cuarto nivel ----------------
   estante:
     build: ./Estante/Estante
+    container_name: sc-estante
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_estante
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
       MS_LIBRO_URL: http://libro:8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      libro: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      libro:
+        condition: service_started
+    networks:
+      - sala-capitular
 
   historial:
     build: ./Historial/Historial
+    container_name: sc-historial
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_historial
       DB_USER: root
@@ -100,59 +155,94 @@ services:
       MS_LIBRO_URL: http://libro:8085
       MS_USER_URL: http://user:8082
       MS_ESTADO_URL: http://estado:8084
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      libro: { condition: service_started }
-      user: { condition: service_started }
-      estado: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      libro:
+        condition: service_started
+      user:
+        condition: service_started
+      estado:
+        condition: service_started
+    networks:
+      - sala-capitular
 
-  # ---------------- Quinto nivel ----------------
   multas:
     build: ./Multas/Multas
+    container_name: sc-multas
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_multas
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
       MS_USER_URL: http://user:8082
       MS_HISTORIAL_URL: http://historial:8087
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      user: { condition: service_started }
-      historial: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      user:
+        condition: service_started
+      historial:
+        condition: service_started
+    networks:
+      - sala-capitular
 
   detalle:
     build: ./Detalle/Detalle
+    container_name: sc-detalle
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_detalle
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
       MS_HISTORIAL_URL: http://historial:8087
       MS_LIBRO_URL: http://libro:8085
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      historial: { condition: service_started }
-      libro: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      historial:
+        condition: service_started
+      libro:
+        condition: service_started
+    networks:
+      - sala-capitular
 
   resena:
     build: ./ReseñaLibro/ReseñaLibro
+    container_name: sc-resena
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_resena_libro
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:-root}
       MS_LIBRO_URL: http://libro:8085
       MS_USER_URL: http://user:8082
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      libro: { condition: service_started }
-      user: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      libro:
+        condition: service_started
+      user:
+        condition: service_started
+    networks:
+      - sala-capitular
 
-  # ---------------- Último nivel ----------------
   reserva:
     build: ./ReservaLibro/ReservaLibro
+    container_name: sc-reserva
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_reserva_libro
       DB_USER: root
@@ -160,14 +250,22 @@ services:
       MS_LIBRO_URL: http://libro:8085
       MS_USER_URL: http://user:8082
       MS_MULTAS_URL: http://multas:8088
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      mysql: { condition: service_healthy }
-      libro: { condition: service_started }
-      user: { condition: service_started }
-      multas: { condition: service_started }
-    networks: [sala-capitular]
+      mysql:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+      libro:
+        condition: service_started
+      user:
+        condition: service_started
+      multas:
+        condition: service_started
+    networks:
+      - sala-capitular
 
-  # ---------------- API Gateway ----------------
   api-gateway:
     build: ./api-gateway
     container_name: sc-gateway
@@ -185,19 +283,35 @@ services:
       MS_RESERVA_URL: http://reserva:8089
       MS_DETALLE_URL: http://detalle:8090
       MS_RESENA_URL: http://resena:8091
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      - rol
-      - user
-      - catalogo
-      - estado
-      - libro
-      - estante
-      - historial
-      - multas
-      - reserva
-      - detalle
-      - resena
-    networks: [sala-capitular]
+      eureka-server:
+        condition: service_started
+      rol:
+        condition: service_started
+      user:
+        condition: service_started
+      catalogo:
+        condition: service_started
+      estado:
+        condition: service_started
+      libro:
+        condition: service_started
+      estante:
+        condition: service_started
+      historial:
+        condition: service_started
+      multas:
+        condition: service_started
+      reserva:
+        condition: service_started
+      detalle:
+        condition: service_started
+      resena:
+        condition: service_started
+    networks:
+      - sala-capitular
 
 networks:
   sala-capitular:
