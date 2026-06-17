@@ -6,7 +6,7 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      mvc:
+     mvc:
         routes:
           - id: rol
             uri: ${MS_ROL_URL:http://localhost:8081}
