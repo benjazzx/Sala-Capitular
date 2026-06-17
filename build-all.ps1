@@ -1,14 +1,21 @@
 $ErrorActionPreference = "Stop"
 
 $base = Split-Path -Parent $MyInvocation.MyCommand.Path
-$localJdk = Join-Path $base ".jdk\jdk-21.0.11+10"
+$localJdk = "$PSScriptRoot\.jdk\jdk-21.0.11+10"
 
-if (-not (Test-Path (Join-Path $localJdk "bin\java.exe"))) {
-    throw "No se encontro JDK 21 en $localJdk. Ejecuta primero .\use-java21.ps1 o instala JDK 21."
+if (Test-Path $localJdk) {
+    $env:JAVA_HOME = $localJdk
+    $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+    Write-Host "Usando JDK local: $localJdk"
+}
+elseif ($env:JAVA_HOME -and (Test-Path "$env:JAVA_HOME\bin\java.exe")) {
+    Write-Host "Usando JAVA_HOME existente: $env:JAVA_HOME"
+}
+else {
+    throw "No se encontro JDK 21 local ni JAVA_HOME valido. Instala JDK 21 o ejecuta .\use-java21.ps1."
 }
 
-$env:JAVA_HOME = $localJdk
-$env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+java -version
 
 $resenaRoot = (Get-ChildItem -LiteralPath $base -Directory | Where-Object { $_.Name -like "Rese*Libro" } | Select-Object -First 1).Name
 if (-not $resenaRoot) {
