@@ -263,6 +263,8 @@ services:
   reserva:
     build: ./ReservaLibro/ReservaLibro
     container_name: sc-reserva
+    ports:
+     - "8089:8089"
     environment:
       DB_URL: jdbc:mysql://mysql:3306/db_reserva_libro
       DB_USER: root
