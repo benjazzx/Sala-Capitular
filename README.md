@@ -1,10 +1,13 @@
-# Sistema de Biblioteca - Arquitectura de Microservicios
+# Sistema de Biblioteca — Arquitectura de Microservicios
 
-**Estado:** ✅ **Compilación Exitosa con Java 21**
+**Rama de entrega:** `feature/cierre-sumativa-microservicios`
+**Estado:** ✅ Compilación exitosa · Java 21 · Spring Boot 4.0.7
+
+---
 
 ## Descripción
 
-Sistema de gestión de biblioteca desarrollado con arquitectura de microservicios independientes usando Spring Boot, Java 21 y comunicación entre servicios mediante Feign Client. Cada microservicio posee su propia base de datos, lógica de negocio y endpoints REST completos.
+Sistema de gestión de biblioteca desarrollado con arquitectura de microservicios independientes usando Spring Boot, Java 21 y comunicación entre servicios mediante Feign Client. Cada microservicio posee su propia base de datos, lógica de negocio y endpoints REST completos. Incluye Eureka Server para service discovery, API Gateway con enrutamiento dinámico (`lb://`) y soporte Docker Compose.
 
 ## Integrantes del equipo
 
@@ -14,118 +17,57 @@ Sistema de gestión de biblioteca desarrollado con arquitectura de microservicio
 | Gabriel Castro | Desarrollador |
 | Felipe Lara | Desarrollador |
 
-## ⚡ Quick Start
+---
 
-### 1. Validar todos los servicios
-```powershell
-cd d:\workspace\Duoc\Sala-Capitular
-.\build-all.ps1
-```
-
-### 2. Ejecutar un servicio
-```powershell
-.\run-service.ps1 Rol
-.\run-service.ps1 Libro
-```
-
-### 3. Ver API Swagger
-```
-http://localhost:8081/swagger-ui/index.html  (Rol)
-http://localhost:8085/swagger-ui/index.html  (Libro)
-http://localhost:8089/swagger-ui/index.html  (ReservaLibro)
-```
-
-### 4. Ejecutar tests con cobertura
-```powershell
-.\build-all.ps1
-```
-
-**Documentación completa:** Ver [docs/ESTADO_ACTUAL.md](docs/ESTADO_ACTUAL.md)
-
-## Tecnologías utilizadas
+## Tecnologías
 
 - Java 21
 - Spring Boot 4.0.7
-- Spring Cloud 2025.1.1 (Feign Client + Gateway MVC)
+- Spring Cloud 2025.1.2 (Feign, Gateway MVC, Eureka, LoadBalancer)
 - Spring Data JPA + Hibernate
 - MySQL (XAMPP) / H2 (tests)
-- Lombok
-- Bean Validation (JSR 380)
-- SLF4J (logging)
-- springdoc OpenAPI / Swagger UI
-- JUnit 5 + Mockito + JaCoCo
+- Netflix Eureka Server (service discovery)
+- Spring Cloud Gateway MVC (API Gateway)
+- springdoc-openapi 3.0.3 (Swagger UI / OpenAPI)
+- JUnit 5 + Mockito + AssertJ + JaCoCo 0.8.13
 - Docker + Docker Compose
-- Maven
+- Maven Wrapper
 
-## Microservicios implementados
+---
 
-| Servicio | Puerto | Base de datos | Feign hacia |
-|----------|--------|---------------|-------------|
-| Rol | 8081 | db_rol | — |
-| User | 8082 | db_user | Rol |
-| Catalogo | 8083 | db_catalogo | — |
-| Estado | 8084 | db_estado | — |
-| Libro | 8085 | db_libro | Catalogo, Estado, User |
-| Estante | 8086 | db_estante | Libro |
-| Historial | 8087 | db_historial | Libro, User, Estado |
-| Multas | 8088 | db_multas | User, Historial |
-| ReservaLibro | 8089 | db_reserva_libro | Libro, User, Multas |
-| Detalle | 8090 | db_detalle | Historial, Libro |
-| ReseñaLibro | 8091 | db_resena_libro | Libro, User |
+## Microservicios
 
-## Reglas de negocio
+| Servicio | Puerto | Base de datos | Nombre Eureka | Swagger |
+|----------|--------|---------------|---------------|---------|
+| Rol | 8081 | db_rol | `rol-service` | http://localhost:8081/swagger-ui/index.html |
+| User | 8082 | db_user | `user-service` | http://localhost:8082/swagger-ui/index.html |
+| Catalogo | 8083 | db_catalogo | `catalogo-service` | http://localhost:8083/swagger-ui/index.html |
+| Estado | 8084 | db_estado | `estado-service` | http://localhost:8084/swagger-ui/index.html |
+| Libro | 8085 | db_libro | `libro-service` | http://localhost:8085/swagger-ui/index.html |
+| Estante | 8086 | db_estante | `estante-service` | http://localhost:8086/swagger-ui/index.html |
+| Historial | 8087 | db_historial | `historial-service` | http://localhost:8087/swagger-ui/index.html |
+| Multas | 8088 | db_multas | `multas-service` | http://localhost:8088/swagger-ui/index.html |
+| ReservaLibro | 8089 | db_reserva_libro | `reserva-libro-service` | http://localhost:8089/swagger-ui/index.html |
+| Detalle | 8090 | db_detalle | `detalle-service` | http://localhost:8090/swagger-ui/index.html |
+| ReseñaLibro | 8091 | db_resena_libro | `resena-libro-service` | http://localhost:8091/swagger-ui/index.html |
+| API Gateway | 8080 | — | `api-gateway` | — |
+| Eureka Server | 8761 | — | — | http://localhost:8761 |
 
-- **Roles**: Solo usuarios con rol `AUTOR` pueden ser asignados como autores de un libro.
-- **Multas**: Si la suma de puntos de multas de un usuario supera 3, queda bloqueado para reservar. Al intentar reservar con multas activas, la respuesta incluye el detalle de sus multas.
-- **Reservas**: No se pueden crear reservas duplicadas (`ACTIVA`) para el mismo libro.
-- **Admin multa**: Solo un usuario con rol `ADMIN` puede registrar multas. Las multas tienen tipo: `NO_ENTREGA`, `DAÑO` o `RETRASO`.
-- **Login**: Los usuarios (ADMIN, AUTOR, CLIENTE) pueden iniciar sesión con email y contraseña.
+---
 
-## Funcionalidades implementadas
+## Requisitos previos
 
-- CRUD completo en los 11 microservicios
-- Validaciones con Bean Validation en todos los DTOs
-- Manejo centralizado de errores con `@RestControllerAdvice` (GlobalExceptionHandler)
-- Comunicación entre microservicios con Feign Client
-- Logs estructurados con SLF4J en toda la capa de servicio (info, warn, error)
-- Datos precargados automáticamente al iniciar cada servicio (DataInitializer)
-- Login por email y contraseña
-- Aviso de multas al momento de intentar reservar un libro
-- Filtro de multas por tipo y endpoint `/no-entrega` para el administrador
+- Java 21 instalado (`java -version`)
+- Maven Wrapper incluido en cada microservicio (`mvnw.cmd` / `./mvnw`)
+- MySQL corriendo en puerto 3306 (XAMPP o Docker)
+- Docker Desktop (para ejecución con Docker Compose)
+- Git
 
-## Datos precargados por defecto
+---
 
-| Servicio | Datos |
-|----------|-------|
-| Rol | CLIENTE, ADMIN, AUTOR |
-| Catalogo | 7 géneros literarios |
-| Estado | DISPONIBLE, RESERVADO, PRESTADO, DAÑADO |
-| User | 1 admin, 3 autores, 3 clientes |
-| Libro | 7 libros clásicos |
-| Estante | 7 estantes (pasillo + nivel) |
-| Historial | 5 préstamos |
-| Multas | 3 multas |
-| ReservaLibro | 4 reservas |
-| Detalle | 5 detalles |
-| ReseñaLibro | 6 reseñas |
+## Ejecución manual (uno por uno)
 
-## Credenciales de prueba
-
-| Email | Contraseña | Rol |
-|-------|-----------|-----|
-| admin@biblioteca.cl | admin123 | ADMIN |
-| gabriela.mistral@biblioteca.cl | autor123 | AUTOR |
-| juan.perez@biblioteca.cl | cliente123 | CLIENTE |
-
-## Pasos para ejecutar
-
-### 1. Requisitos previos
-
-- Java 21 instalado
-- XAMPP con MySQL corriendo en puerto 3306
-- Maven Wrapper incluido en cada microservicio (`mvnw.cmd` en Windows, `./mvnw` en Linux/macOS)
-
-### 2. Crear bases de datos en MySQL
+### 1. Crear bases de datos en MySQL
 
 Ejecutar en phpMyAdmin o consola MySQL:
 
@@ -143,186 +85,219 @@ CREATE DATABASE db_detalle;
 CREATE DATABASE db_resena_libro;
 ```
 
-### 3. Iniciar los microservicios en orden
-
-Los microservicios deben iniciarse en el siguiente orden debido a las dependencias entre ellos:
-
-```
-1. Rol          (puerto 8081)
-2. Catalogo     (puerto 8083)
-3. Estado       (puerto 8084)
-4. User         (puerto 8082)
-5. Libro        (puerto 8085)
-6. Estante      (puerto 8086)
-7. Historial    (puerto 8087)
-8. Multas       (puerto 8088)
-9. Detalle      (puerto 8090)
-10. ReseñaLibro (puerto 8091)
-11. ReservaLibro (puerto 8089)
-12. API Gateway (puerto 8080)
-```
-
-Para cada microservicio:
-
-```bash
-cd <carpeta-del-microservicio>
-.\mvnw.cmd spring-boot:run
-```
-
-En Linux/macOS usa `./mvnw spring-boot:run`.
-
-También puedes ejecutar desde la raíz del proyecto con Java 21 local:
+### 2. Iniciar Eureka Server (primero)
 
 ```powershell
-.\run-service.ps1 Rol
-.\run-service.ps1 Catalogo
-.\run-service.ps1 Estado
+cd eurekaserver
+.\mvnw.cmd spring-boot:run
 ```
 
-### 4. Verificar que los datos se precargaron
+Verificar en: http://localhost:8761
 
-```
-GET http://localhost:8081/api/roles
-GET http://localhost:8082/api/users
-GET http://localhost:8085/api/libros
-```
+### 3. Iniciar microservicios (en orden)
 
-## Endpoints principales por microservicio
+```powershell
+# Servicios base (sin dependencias entre sí)
+cd Rol\Rol        && .\mvnw.cmd spring-boot:run
+cd Catalogo\Catalogo && .\mvnw.cmd spring-boot:run
+cd Estado\Estado  && .\mvnw.cmd spring-boot:run
 
-### Rol (8081)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | /api/roles | Listar todos |
-| GET | /api/roles/{id} | Buscar por id |
-| POST | /api/roles | Crear |
-| PUT | /api/roles/{id} | Actualizar |
-| DELETE | /api/roles/{id} | Eliminar |
+# User depende de Rol
+cd User\User      && .\mvnw.cmd spring-boot:run
 
-### User (8082)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | /api/users | Listar todos |
-| GET | /api/users/{id} | Buscar por id |
-| POST | /api/users | Crear |
-| POST | /api/users/login | Iniciar sesión |
-| PUT | /api/users/{id} | Actualizar |
-| DELETE | /api/users/{id} | Eliminar |
+# Libro depende de Catalogo, Estado, User
+cd Libro\Libro    && .\mvnw.cmd spring-boot:run
 
-### Multas (8088)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | /api/multas | Listar todas |
-| GET | /api/multas/{id} | Buscar por id |
-| GET | /api/multas/usuario/{userId} | Multas de un usuario |
-| GET | /api/multas/usuario/{userId}/estado | Estado detallado con aviso |
-| GET | /api/multas/usuario/{userId}/puede-pedir | Verificar si puede reservar |
-| GET | /api/multas/no-entrega | Filtrar por NO_ENTREGA |
-| GET | /api/multas/tipo/{tipo} | Filtrar por tipo |
-| POST | /api/multas | Registrar multa (requiere adminId con rol ADMIN) |
-| PUT | /api/multas/{id} | Actualizar |
-| DELETE | /api/multas/{id} | Eliminar |
+# Nivel siguiente
+cd Estante\Estante     && .\mvnw.cmd spring-boot:run
+cd Historial\Historial && .\mvnw.cmd spring-boot:run
+cd Multas\Multas       && .\mvnw.cmd spring-boot:run
 
-### ReservaLibro (8089)
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | /api/reservas | Listar todas |
-| GET | /api/reservas/{id} | Buscar por id |
-| POST | /api/reservas | Crear reserva (incluye aviso de multas en respuesta) |
-| PUT | /api/reservas/{id} | Actualizar |
-| DELETE | /api/reservas/{id} | Eliminar |
-
-> Los demás servicios (Catalogo, Estado, Libro, Estante, Historial, Detalle, ReseñaLibro) siguen el mismo patrón CRUD estándar en sus respectivos puertos.
-
-## Estructura de cada microservicio
-
-```
-src/main/java/Biblioteca/example/<Servicio>/
-├── config/
-│   └── DataInitializer.java      ← datos precargados al iniciar
-├── model/
-│   └── <Entidad>.java            ← @Entity JPA
-├── dto/
-│   ├── <Entidad>RequestDTO.java  ← validaciones Bean Validation
-│   └── <Entidad>ResponseDTO.java ← respuesta al cliente
-├── repository/
-│   └── <Entidad>Repository.java  ← extends JpaRepository
-├── service/
-│   └── <Entidad>Service.java     ← lógica + logs SLF4J
-├── controller/
-│   └── <Entidad>Controller.java  ← endpoints REST
-├── client/
-│   └── <Otro>Client.java         ← @FeignClient (si consume otros)
-└── exception/
-    └── GlobalExceptionHandler.java ← manejo centralizado de errores
+# Nivel final
+cd Detalle\Detalle           && .\mvnw.cmd spring-boot:run
+cd ReseñaLibro\ReseñaLibro   && .\mvnw.cmd spring-boot:run
+cd ReservaLibro\ReservaLibro && .\mvnw.cmd spring-boot:run
 ```
 
-## Repositorio
+En Linux/macOS reemplazar `.\mvnw.cmd` por `./mvnw`.
 
-[https://github.com/benjazzx/Sala-Capitular](https://github.com/benjazzx/Sala-Capitular)
+### 4. Iniciar API Gateway (último)
 
-## Documentación API (Swagger)
-
-Cada microservicio expone Swagger UI y el contrato OpenAPI:
-
-```
-http://localhost:{puerto}/swagger-ui/index.html
-http://localhost:{puerto}/v3/api-docs
-```
-
-Detalle completo de endpoints en [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md).
-
-## Tests y cobertura
-
-Cada servicio incluye pruebas unitarias de servicio y de controlador (JUnit 5 + Mockito + MockMvc) y mide cobertura con JaCoCo sobre una base H2 en memoria (perfil `test`).
-
-```bash
-cd <carpeta-del-microservicio>
-.\mvnw.cmd clean verify
-# Reporte: target/site/jacoco/index.html
-```
-
-En Linux/macOS usa `./mvnw clean verify`.
-
-Estrategia detallada en [`docs/TESTING_STRATEGY.md`](docs/TESTING_STRATEGY.md).
-
-## API Gateway
-
-Un API Gateway (Spring Cloud Gateway MVC) en el puerto **8080** enruta por path hacia los 11 servicios. Ejecutar:
-
-```bash
+```powershell
 cd api-gateway
 .\mvnw.cmd spring-boot:run
-# Acceso unificado: http://localhost:8080/api/...
 ```
 
-Plan y tabla de rutas en [`docs/API_GATEWAY_PLAN.md`](docs/API_GATEWAY_PLAN.md).
+El gateway requiere que Eureka esté corriendo y al menos un servicio registrado. Acceso unificado: http://localhost:8080/api/...
 
-## Ejecución con Docker
+---
 
-Todo el sistema (MySQL + 11 servicios + gateway) se levanta con Docker Compose:
+## Ejecución con Docker Compose
+
+Todo el sistema (MySQL + Eureka + 11 servicios + gateway) se levanta con un solo comando:
 
 ```bash
 cp .env.example .env
 docker compose up --build
-# Punto de entrada: http://localhost:8080/api/...
 ```
 
+Verificar contenedores:
+```bash
+docker ps
+docker images
+```
+
+URLs una vez levantado:
+- Eureka:  http://localhost:8761
+- Gateway: http://localhost:8080/api/roles
+
 Guía completa en [`docs/DOCKER_GUIDE.md`](docs/DOCKER_GUIDE.md).
+
+---
+
+## Eureka Server
+
+El Eureka Server actúa como registro de descubrimiento. Todos los microservicios se registran automáticamente al arrancar. El API Gateway usa las URIs `lb://nombre-servicio` para resolver instancias vía Eureka.
+
+Consola de administración: http://localhost:8761
+
+Guía completa en [`docs/EUREKA_GUIDE.md`](docs/EUREKA_GUIDE.md).
+
+---
+
+## API Gateway
+
+El API Gateway (Spring Cloud Gateway MVC, puerto **8080**) enruta por path hacia los 11 microservicios usando Eureka Service Discovery:
+
+| Path | Servicio |
+|------|----------|
+| `/api/roles/**` | `lb://rol-service` |
+| `/api/users/**` | `lb://user-service` |
+| `/api/catalogos/**` | `lb://catalogo-service` |
+| `/api/estados/**` | `lb://estado-service` |
+| `/api/libros/**` | `lb://libro-service` |
+| `/api/estantes/**` | `lb://estante-service` |
+| `/api/historiales/**` | `lb://historial-service` |
+| `/api/multas/**` | `lb://multas-service` |
+| `/api/reservas/**` | `lb://reserva-libro-service` |
+| `/api/detalles/**` | `lb://detalle-service` |
+| `/api/resenas/**` | `lb://resena-libro-service` |
+
+Plan y detalles en [`docs/API_GATEWAY_PLAN.md`](docs/API_GATEWAY_PLAN.md).
+
+---
+
+## Swagger / OpenAPI
+
+Cada microservicio expone:
+- Swagger UI: `http://localhost:{puerto}/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:{puerto}/v3/api-docs`
+
+Documentación completa en [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md).
+
+---
+
+## Pruebas unitarias y JaCoCo
+
+```powershell
+cd <carpeta-del-microservicio>
+.\mvnw.cmd clean verify
+# Reporte: target\site\jacoco\index.html
+```
+
+Cobertura mínima alcanzada: **80% en todos los microservicios** (rango real: 88%–98%).
+
+| Microservicio | Cobertura |
+|--------------|-----------|
+| Rol | 96%+ |
+| User | 94%+ |
+| Catalogo | 96%+ |
+| Estado | 89%+ |
+| Libro | 90%+ |
+| Estante | 88%+ |
+| Historial | 92%+ |
+| Multas | 91%+ |
+| ReservaLibro | 88%+ |
+| Detalle | 92%+ |
+| ReseñaLibro | 93%+ |
+
+Estrategia en [`docs/TESTING_STRATEGY.md`](docs/TESTING_STRATEGY.md). Reporte en [`docs/COVERAGE_REPORT.md`](docs/COVERAGE_REPORT.md).
+
+---
+
+## Reglas de negocio
+
+- **Roles**: Solo usuarios con rol `AUTOR` pueden ser asignados como autores de un libro.
+- **Multas**: Si la suma de puntos supera 3, el usuario queda bloqueado para reservar.
+- **Reservas**: No se pueden crear reservas `ACTIVA` duplicadas para el mismo libro.
+- **Admin multa**: Solo un usuario con rol `ADMIN` puede registrar multas.
+- **Login**: Usuarios (ADMIN, AUTOR, CLIENTE) pueden autenticarse con email y contraseña.
+
+---
+
+## Credenciales de prueba
+
+| Email | Contraseña | Rol |
+|-------|-----------|-----|
+| admin@biblioteca.cl | admin123 | ADMIN |
+| gabriela.mistral@biblioteca.cl | autor123 | AUTOR |
+| juan.perez@biblioteca.cl | cliente123 | CLIENTE |
+
+---
+
+## Comandos útiles
+
+```powershell
+# Compilar y verificar cobertura
+.\mvnw.cmd clean verify
+
+# Solo ejecutar tests
+.\mvnw.cmd test
+
+# Levantar servicio
+.\mvnw.cmd spring-boot:run
+
+# Construir JAR
+.\mvnw.cmd clean package -DskipTests
+
+# Docker Compose
+docker compose up --build -d
+docker compose down
+docker compose logs -f <servicio>
+```
+
+---
+
+## Troubleshooting
+
+| Problema | Solución |
+|---------|----------|
+| Puerto ocupado | `netstat -ano \| findstr :<puerto>` → `taskkill /PID <PID> /F` |
+| Microservicio no arranca | Verificar MySQL activo y base de datos creada |
+| Gateway devuelve 503 | Esperar ~30s para que Eureka registre el servicio |
+| Servicio no aparece en Eureka | Verificar `eureka.client.service-url.defaultZone` en application.properties |
+| Tests fallan con DB error | Tests usan perfil H2 en memoria — no requieren MySQL |
+| Docker build falla | Verificar que `mvnw` tenga permisos: `chmod +x mvnw` |
+
+---
 
 ## Documentación adicional
 
 | Documento | Contenido |
-|---|---|
-| [docs/DIAGNOSTICO_INICIAL.md](docs/DIAGNOSTICO_INICIAL.md) | Inventario, orden de arranque, problemas detectados |
+|-----------|-----------|
+| [docs/DIAGNOSTICO_FINAL.md](docs/DIAGNOSTICO_FINAL.md) | Diagnóstico real del estado de todos los microservicios |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitectura y diagrama de dependencias |
+| [docs/EUREKA_GUIDE.md](docs/EUREKA_GUIDE.md) | Guía Eureka Server y registro de clientes |
+| [docs/API_GATEWAY_PLAN.md](docs/API_GATEWAY_PLAN.md) | Diseño del API Gateway |
 | [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) | Endpoints y ejemplos JSON |
-| [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) | Estrategia de pruebas |
+| [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md) | Estrategia de pruebas unitarias |
 | [docs/COVERAGE_REPORT.md](docs/COVERAGE_REPORT.md) | Reporte de cobertura JaCoCo |
-| [docs/API_GATEWAY_PLAN.md](docs/API_GATEWAY_PLAN.md) | Diseño del gateway |
-| [docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md) | Guía Docker |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Recomendaciones y mejoras futuras |
-| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Registro de cambios |
+| [docs/DOCKER_GUIDE.md](docs/DOCKER_GUIDE.md) | Guía Docker y Docker Compose |
+| [docs/VERIFICATION_CHECKLIST.md](docs/VERIFICATION_CHECKLIST.md) | Lista de verificación por microservicio |
+| [docs/FINAL_DELIVERY_REPORT.md](docs/FINAL_DELIVERY_REPORT.md) | Reporte final de entrega |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Mejoras futuras |
 
-## Registro de colaboración
+## Repositorio
 
-Se realizó una revisión general de la arquitectura del proyecto, considerando la organización por microservicios, comunicación mediante Feign Client y reglas de negocio principales.
+[https://github.com/benjazzx/Sala-Capitular](https://github.com/benjazzx/Sala-Capitular)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                

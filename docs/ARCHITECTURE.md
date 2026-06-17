@@ -60,7 +60,8 @@ Cada microservicio sigue una arquitectura en capas idéntica:
 ## Comunicación
 
 - **Síncrona, vía Feign.** Cada llamada cruzada valida la existencia del recurso remoto y traduce `FeignException.NotFound` a un error de negocio legible.
-- **Sin descubrimiento de servicios** (no hay Eureka): las URLs se resuelven por configuración (`ms.*.url`), parametrizadas con variables de entorno para Docker.
+- **Descubrimiento de servicios vía Eureka:** Todos los microservicios se registran en el Eureka Server (`:8761`) con nombres lowercase-hyphenated (`rol-service`, `user-service`, etc.). El API Gateway resuelve los servicios usando `lb://` URIs (Spring Cloud LoadBalancer + Eureka).
+- Las URLs inter-servicio de los Feign Clients (Historial→Libro, etc.) se parametrizan via `ms.*.url` como fallback local; en Docker Compose se pasan como variables de entorno.
 
 ## Persistencia
 
@@ -70,8 +71,4 @@ Cada microservicio sigue una arquitectura en capas idéntica:
 ## Observabilidad
 
 - Cada servicio expone Swagger UI y el contrato OpenAPI.
-- El gateway expone los endpoints de Actuator `health`, `info` y `gateway`.
-
-## Limitaciones conocidas / deuda técnica
-
-Ver `docs/ROADMAP.md`. En resumen: ausencia de service discovery, comunicación puramente síncrona (sin resiliencia tipo circuit breaker), y autenticación/JWT no implementada a nivel de gateway.
+- El gateway expone los
