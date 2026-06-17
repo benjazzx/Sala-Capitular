@@ -27,4 +27,15 @@ Se eligió la variante **MVC** (`spring-cloud-starter-gateway-server-webmvc`) en
 | `/api/detalles/**` | `lb://detalle-service` | detalle-service | 8090 |
 | `/api/resenas/**` | `lb://resena-libro-service` | resena-libro-service | 8091 |
 
-## Configuración (r
+## Configuración (resumen)
+
+Las rutas se definen en `api-gateway/src/main/resources/application.yml` bajo `spring.cloud.gateway.mvc.routes`. Cada destino usa `lb://NOMBRE-SERVICIO` para service discovery vía Eureka. Los accesos directos por puerto también siguen funcionando.
+
+**Prerrequisito:** Eureka Server debe estar levantado en `:8761` antes de iniciar el gateway.
+
+## Futuras mejoras (fuera de alcance actual)
+
+- **Autenticación centralizada** (JWT) validada en el gateway antes de reenviar.
+- **Rate limiting** por cliente.
+- **Filtros de logging/trazabilidad** (correlation IDs).
+- **Resiliencia** (Resilience4j circuit breaker) para degradar con elegancia cuando un servicio cae.

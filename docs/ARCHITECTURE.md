@@ -71,4 +71,8 @@ Cada microservicio sigue una arquitectura en capas idéntica:
 ## Observabilidad
 
 - Cada servicio expone Swagger UI y el contrato OpenAPI.
-- El gateway expone los
+- El gateway expone los endpoints de Actuator `health`, `info` y `gateway`.
+
+## Limitaciones conocidas / deuda técnica
+
+Ver `docs/ROADMAP.md`. En resumen: comunicación puramente síncrona (sin resiliencia tipo circuit breaker), y autenticación/JWT no implementada a nivel de gateway. Service discovery ya está implementado con Eureka.
