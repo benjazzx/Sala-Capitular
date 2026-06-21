@@ -1,8 +1,5 @@
 # Sistema de Biblioteca — Arquitectura de Microservicios
 
-**Rama de entrega:** `feature/cierre-sumativa-microservicios`
-**Estado:** ✅ Compilación exitosa · Java 21 · Spring Boot 4.0.7
-
 ---
 
 ## Descripción
