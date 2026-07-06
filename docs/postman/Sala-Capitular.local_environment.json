@@ -1,0 +1,123 @@
+{
+  "id": "17e21dda-59f8-4302-9d22-db515d591a5a",
+  "name": "Sala Capitular - Local",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eurekaUrl",
+      "value": "http://localhost:8761",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rolClienteId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rolAdminId",
+      "value": "2",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rolAutorId",
+      "value": "3",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userAdminId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userAutorId",
+      "value": "2",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userClienteId",
+      "value": "5",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "catalogoId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "estadoDisponibleId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "estadoPrestadoId",
+      "value": "3",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "libroId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "estanteId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "historialId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "multaId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "reservaId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "detalleId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "resenaId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userTestId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-06-21T13:53:56.000Z",
+  "_postman_exported_using": "Sala-Capitular/manual"
+}
